@@ -1,0 +1,8 @@
+schema_name,relation_name,relation_type,row_count,column_count,status
+staged,dummyjson_products,BASE TABLE,100,30,PASS
+staged,dummyjson_users,BASE TABLE,100,55,PASS
+staged,dummyjson_carts,BASE TABLE,100,9,PASS
+staged,dummyjson_cart_items,BASE TABLE,378,13,PASS
+mart,dummyjson_interactions,VIEW,378,11,PASS
+mart,dummyjson_item_features,VIEW,100,15,PASS
+mart,dummyjson_user_cart_features,VIEW,100,8,PASS

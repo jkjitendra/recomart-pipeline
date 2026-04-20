@@ -10,6 +10,7 @@ data/raw/*
 data/staged/*
 data/curated/*
 data/features/*
+data/warehouse/*
 
 # Allow DVC metadata files inside data folders
 !data/
@@ -17,10 +18,12 @@ data/features/*
 !data/staged/
 !data/curated/
 !data/features/
+!data/warehouse/
 !data/raw/*.dvc
 !data/staged/*.dvc
 !data/curated/*.dvc
 !data/features/*.dvc
+!data/warehouse/*.dvc
 !data/**/.gitignore
 
 # Logs and generated heavy artifacts
