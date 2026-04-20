@@ -6,6 +6,7 @@ __pycache__/
 .env
 
 # Raw and generated data files
+data/external/*
 data/raw/*
 data/staged/*
 data/curated/*
@@ -14,11 +15,13 @@ data/warehouse/*
 
 # Allow DVC metadata files inside data folders
 !data/
+!data/external/
 !data/raw/
 !data/staged/
 !data/curated/
 !data/features/
 !data/warehouse/
+!data/external/*.dvc
 !data/raw/*.dvc
 !data/staged/*.dvc
 !data/curated/*.dvc
