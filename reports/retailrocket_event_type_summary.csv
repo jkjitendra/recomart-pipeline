@@ -1,0 +1,4 @@
+event,row_count,distinct_visitors,distinct_items,rows_with_transaction_id
+view,2664312,1404179,234838,0.0
+addtocart,69332,37722,23903,0.0
+transaction,22457,11719,12025,22457.0
