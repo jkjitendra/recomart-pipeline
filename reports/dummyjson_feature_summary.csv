@@ -1,0 +1,4 @@
+schema_name,table_name,relation_type,output_file,row_count,column_count,output_exists,status,missing_catalog_metadata_interactions
+features,dummyjson_user_features,BASE TABLE,data/features/source=dummyjson/user_features.parquet,100,14,True,PASS,
+features,dummyjson_item_features,BASE TABLE,data/features/source=dummyjson/item_features.parquet,100,21,True,PASS,
+features,dummyjson_interaction_features,BASE TABLE,data/features/source=dummyjson/interaction_features.parquet,378,16,True,PASS,183
