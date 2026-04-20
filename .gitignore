@@ -6,10 +6,10 @@ __pycache__/
 .env
 
 # Raw and generated data files
-data/raw/**
-data/staged/**
-data/curated/**
-data/features/**
+data/raw/*
+data/staged/*
+data/curated/*
+data/features/*
 
 # Allow DVC metadata files inside data folders
 !data/
@@ -17,7 +17,10 @@ data/features/**
 !data/staged/
 !data/curated/
 !data/features/
-!data/**/*.dvc
+!data/raw/*.dvc
+!data/staged/*.dvc
+!data/curated/*.dvc
+!data/features/*.dvc
 !data/**/.gitignore
 
 # Logs and generated heavy artifacts
