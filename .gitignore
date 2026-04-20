@@ -1,0 +1,27 @@
+cat > .gitignore << 'EOF'
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+.env
+
+# Data
+data/raw/
+data/staged/
+data/curated/
+data/features/
+
+# Logs and reports generated locally
+logs/
+reports/generated/
+
+# ML artifacts
+mlruns/
+models/
+artifacts/
+
+# OS / IDE
+.DS_Store
+.vscode/
+EOF
