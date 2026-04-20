@@ -1,0 +1,48 @@
+dataset_name,check_name,status,details
+products,file_exists,PASS,Found file: data/staged/source=dummyjson/products.parquet
+products,read_parquet,PASS,"Successfully read file with shape (100, 30)"
+products,row_count,PASS,Found 100 rows
+products,required_columns,PASS,"All required columns found: ['_prepared_at', '_source_file', '_source_system', 'category', 'id', 'price', 'title']"
+users,file_exists,PASS,Found file: data/staged/source=dummyjson/users.parquet
+users,read_parquet,PASS,"Successfully read file with shape (100, 55)"
+users,row_count,PASS,Found 100 rows
+users,required_columns,PASS,"All required columns found: ['_prepared_at', '_source_file', '_source_system', 'email', 'firstName', 'id', 'lastName']"
+carts,file_exists,PASS,Found file: data/staged/source=dummyjson/carts.parquet
+carts,read_parquet,PASS,"Successfully read file with shape (100, 9)"
+carts,row_count,PASS,Found 100 rows
+carts,required_columns,PASS,"All required columns found: ['cart_id', 'discounted_total', 'total', 'total_products', 'total_quantity', 'user_id']"
+cart_items,file_exists,PASS,Found file: data/staged/source=dummyjson/cart_items.parquet
+cart_items,read_parquet,PASS,"Successfully read file with shape (378, 13)"
+cart_items,row_count,PASS,Found 378 rows
+cart_items,required_columns,PASS,"All required columns found: ['cart_id', 'price', 'product_id', 'product_title', 'quantity', 'total', 'user_id']"
+products,unique_id,PASS,No duplicate values found in id
+products,not_null_id,PASS,No nulls found in id
+products,not_null_title,PASS,No nulls found in title
+products,not_null_category,PASS,No nulls found in category
+products,not_null_price,PASS,No nulls found in price
+products,non_negative_price,PASS,All values in price are non-negative
+products,range_rating,PASS,All values in rating are between 0 and 5
+users,unique_id,PASS,No duplicate values found in id
+users,not_null_id,PASS,No nulls found in id
+users,not_null_firstName,PASS,No nulls found in firstName
+users,not_null_lastName,PASS,No nulls found in lastName
+users,not_null_email,PASS,No nulls found in email
+users,email_format,PASS,All emails contain @
+users,range_age,PASS,All values in age are between 0 and 120
+carts,unique_cart_id,PASS,No duplicate values found in cart_id
+carts,not_null_cart_id,PASS,No nulls found in cart_id
+carts,not_null_user_id,PASS,No nulls found in user_id
+carts,not_null_total,PASS,No nulls found in total
+carts,non_negative_total,PASS,All values in total are non-negative
+carts,positive_total_products,PASS,All values in total_products are positive
+carts,positive_total_quantity,PASS,All values in total_quantity are positive
+cart_items,not_null_cart_id,PASS,No nulls found in cart_id
+cart_items,not_null_user_id,PASS,No nulls found in user_id
+cart_items,not_null_product_id,PASS,No nulls found in product_id
+cart_items,not_null_quantity,PASS,No nulls found in quantity
+cart_items,positive_quantity,PASS,All values in quantity are positive
+cart_items,non_negative_price,PASS,All values in price are non-negative
+cart_items,non_negative_total,PASS,All values in total are non-negative
+cart_items,cart_id_exists_in_carts,PASS,All cart_items.cart_id values exist in carts.cart_id
+cart_items,user_id_exists_in_users,PASS,All cart_items.user_id values exist in users.id
+cart_items,product_id_exists_in_products,WARN,90/171 distinct cart product_ids exist in products.parquet. Missing 81 product_ids. This can happen because only the first 100 products were fetched from DummyJSON.
