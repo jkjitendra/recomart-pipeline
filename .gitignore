@@ -26,9 +26,16 @@ data/warehouse/*
 !data/warehouse/*.dvc
 !data/**/.gitignore
 
-# Logs and generated heavy artifacts
+# Model artifacts
+models/*
+
+# Allow DVC metadata files for model artifacts
+!models/
+!models/*.dvc
+!models/**/.gitignore
+
+# MLflow and generated heavy artifacts
 mlruns/
-models/
 artifacts/
 
 # OS / IDE
