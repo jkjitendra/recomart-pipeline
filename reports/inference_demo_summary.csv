@@ -1,0 +1,2 @@
+model_name,model_type,requested_user_count,top_k,recommendation_rows,distinct_recommended_items,training_hit_rate_at_10,training_precision_at_10,training_recall_at_10,catalog_item_coverage,interaction_item_coverage
+popularity_recommender,global_popularity_baseline,5,5,25,5,0.02,0.002,0.02,0.8,0.8771929824561403
