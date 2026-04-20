@@ -1,0 +1,6 @@
+outs:
+- md5: cfe87ff759669642b68c8e80b8c9a7eb.dir
+  size: 152717
+  nfiles: 4
+  hash: md5
+  path: source=dummyjson

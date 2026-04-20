@@ -1,0 +1,9 @@
+2026-04-20 22:47:59,301 | INFO | Fetching endpoint=products attempt=1 url=https://dummyjson.com/products?limit=100
+2026-04-20 22:48:00,556 | INFO | Successfully fetched endpoint=products
+2026-04-20 22:48:00,573 | INFO | Saved raw file=data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json
+2026-04-20 22:48:00,573 | INFO | Fetching endpoint=users attempt=1 url=https://dummyjson.com/users?limit=100
+2026-04-20 22:48:01,582 | INFO | Successfully fetched endpoint=users
+2026-04-20 22:48:01,600 | INFO | Saved raw file=data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json
+2026-04-20 22:48:01,600 | INFO | Fetching endpoint=carts attempt=1 url=https://dummyjson.com/carts?limit=100
+2026-04-20 22:48:02,503 | INFO | Successfully fetched endpoint=carts
+2026-04-20 22:48:02,519 | INFO | Saved raw file=data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json
