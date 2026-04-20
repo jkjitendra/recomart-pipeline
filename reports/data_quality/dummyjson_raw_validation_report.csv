@@ -4,13 +4,28 @@ data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_22480
 data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json,carts,required_fields,PASS,"All records contain required fields: ['id', 'products', 'total', 'userId']"
 data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json,carts,duplicate_ids,PASS,No duplicate ids found
 data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json,carts,cart_products_not_empty,PASS,All carts contain at least one product
+data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json,carts,top_level_schema,PASS,"Found expected keys: ['carts', 'limit', 'skip', 'total']"
+data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json,carts,record_count,PASS,Found 100 records
+data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json,carts,required_fields,PASS,"All records contain required fields: ['id', 'products', 'total', 'userId']"
+data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json,carts,duplicate_ids,PASS,No duplicate ids found
+data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json,carts,cart_products_not_empty,PASS,All carts contain at least one product
 data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json,products,top_level_schema,PASS,"Found expected keys: ['limit', 'products', 'skip', 'total']"
 data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json,products,record_count,PASS,Found 100 records
 data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json,products,required_fields,PASS,"All records contain required fields: ['category', 'id', 'price', 'title']"
 data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json,products,duplicate_ids,PASS,No duplicate ids found
 data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json,products,product_price_range,PASS,All product prices are present and non-negative
+data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json,products,top_level_schema,PASS,"Found expected keys: ['limit', 'products', 'skip', 'total']"
+data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json,products,record_count,PASS,Found 100 records
+data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json,products,required_fields,PASS,"All records contain required fields: ['category', 'id', 'price', 'title']"
+data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json,products,duplicate_ids,PASS,No duplicate ids found
+data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json,products,product_price_range,PASS,All product prices are present and non-negative
 data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json,users,top_level_schema,PASS,"Found expected keys: ['limit', 'skip', 'total', 'users']"
 data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json,users,record_count,PASS,Found 100 records
 data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json,users,required_fields,PASS,"All records contain required fields: ['email', 'firstName', 'id', 'lastName']"
 data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json,users,duplicate_ids,PASS,No duplicate ids found
 data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json,users,user_email_format,PASS,All user emails contain @
+data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json,users,top_level_schema,PASS,"Found expected keys: ['limit', 'skip', 'total', 'users']"
+data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json,users,record_count,PASS,Found 100 records
+data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json,users,required_fields,PASS,"All records contain required fields: ['email', 'firstName', 'id', 'lastName']"
+data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json,users,duplicate_ids,PASS,No duplicate ids found
+data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json,users,user_email_format,PASS,All user emails contain @

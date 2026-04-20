@@ -1,4 +1,7 @@
 file_path,file_name,top_level_keys,list_key,record_count
 data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json,carts_20260420_224802.json,"carts, total, skip, limit",carts,100
+data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json,carts_20260421_031642.json,"carts, total, skip, limit",carts,100
 data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json,products_20260420_224800.json,"products, total, skip, limit",products,100
+data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json,products_20260421_031640.json,"products, total, skip, limit",products,100
 data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json,users_20260420_224801.json,"users, total, skip, limit",users,100
+data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json,users_20260421_031641.json,"users, total, skip, limit",users,100

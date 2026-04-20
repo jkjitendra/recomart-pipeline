@@ -7,3 +7,12 @@
 2026-04-20 22:48:01,600 | INFO | Fetching endpoint=carts attempt=1 url=https://dummyjson.com/carts?limit=100
 2026-04-20 22:48:02,503 | INFO | Successfully fetched endpoint=carts
 2026-04-20 22:48:02,519 | INFO | Saved raw file=data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json
+2026-04-21 03:16:39,897 | INFO | Fetching endpoint=products attempt=1 url=https://dummyjson.com/products?limit=100
+2026-04-21 03:16:40,838 | INFO | Successfully fetched endpoint=products
+2026-04-21 03:16:40,848 | INFO | Saved raw file=data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json
+2026-04-21 03:16:40,848 | INFO | Fetching endpoint=users attempt=1 url=https://dummyjson.com/users?limit=100
+2026-04-21 03:16:41,768 | INFO | Successfully fetched endpoint=users
+2026-04-21 03:16:41,781 | INFO | Saved raw file=data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json
+2026-04-21 03:16:41,781 | INFO | Fetching endpoint=carts attempt=1 url=https://dummyjson.com/carts?limit=100
+2026-04-21 03:16:42,930 | INFO | Successfully fetched endpoint=carts
+2026-04-21 03:16:42,937 | INFO | Saved raw file=data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json
