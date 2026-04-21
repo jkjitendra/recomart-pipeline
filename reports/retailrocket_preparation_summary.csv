@@ -2,5 +2,5 @@ dataset_name,output_file,description,row_count,column_count,file_size_mb,status
 events,data/staged/source=retailrocket/events.parquet,All Retailrocket visitor-item events converted from CSV to Parquet.,2756101,8,54.958,PASS
 category_tree,data/staged/source=retailrocket/category_tree.parquet,Retailrocket category hierarchy converted from CSV to Parquet.,1669,5,0.012,PASS
 item_properties_selected,data/staged/source=retailrocket/item_properties_selected.parquet,Selected item properties limited to categoryid and available.,2291853,7,16.311,PASS
-item_category_latest,data/staged/source=retailrocket/item_category_latest.parquet,Latest categoryid value per item.,417053,6,2.993,PASS
-item_availability_latest,data/staged/source=retailrocket/item_availability_latest.parquet,Latest availability value per item.,417053,7,2.566,PASS
+item_category_latest,data/staged/source=retailrocket/item_category_latest.parquet,Latest categoryid value per item.,417053,6,2.989,PASS
+item_availability_latest,data/staged/source=retailrocket/item_availability_latest.parquet,Latest availability value per item.,417053,7,2.563,PASS
