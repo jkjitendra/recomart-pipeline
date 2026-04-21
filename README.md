@@ -479,21 +479,57 @@ MLflow is used to track:
  - Training reports
  - Candidate item reports
 
-Experiment name:
+Experiment names:
 ```bash
+dummyjson_recommendation_baselines
 retailrocket_recommendation_models
 ```
 
-Open MLflow UI:
+### 14.1 Open MLflow UI:
+Use the local SQLite tracking database:
 ```bash
-TRACKING_URI=$(python -c 'import mlflow; print(mlflow.get_tracking_uri())')
-mlflow ui --backend-store-uri "$TRACKING_URI" --port 5001
+mlflow ui --backend-store-uri "sqlite:///$PWD/mlflow.db" --port 5001
 ```
 
 Then open:
 ```bash
 http://127.0.0.1:5001
 ```
+
+Expected experiments:
+```bash
+dummyjson_recommendation_baselines
+retailrocket_recommendation_models
+Default
+```
+
+### 14.2 Recreate MLflow Runs from Existing Artifacts
+
+If the MLflow UI only shows the Default experiment, recreate the experiment records from the existing model artifacts and report files:
+```bash
+python -m src.reporting.recreate_mlflow_runs
+```
+
+Then open MLflow UI again:
+```bash
+mlflow ui --backend-store-uri "sqlite:///$PWD/mlflow.db" --port 5001
+```
+
+Then open:
+```bash
+http://127.0.0.1:5001
+```
+
+Expected experiments:
+```bash
+dummyjson_recommendation_baselines
+retailrocket_recommendation_models
+Default
+```
+
+This utility does not retrain models. It only logs existing summaries and artifacts back into MLflow.
+
+### 14.3 MLflow Evidence Screenshots
 
 MLflow evidence screenshots:
 ```bash
@@ -503,6 +539,25 @@ reports/screenshots/mlflow_03_retailrocket_run_overview.png
 reports/screenshots/mlflow_04_retailrocket_model_metrics.png
 reports/screenshots/mlflow_05_dummyjson_runs_table.png
 reports/screenshots/mlflow_06_retailrocket_content_based_run.png
+```
+
+Then run:
+
+```bash
+python -m py_compile src/reporting/recreate_mlflow_runs.py
+git add README.md src/reporting/recreate_mlflow_runs.py
+git commit -m "Document MLflow run recreation utility"
+```
+
+Then test the utility:
+```bash
+python -m src.reporting.recreate_mlflow_runs
+mlflow ui --backend-store-uri "sqlite:///$PWD/mlflow.db" --port 5001
+```
+
+Open:
+```bash
+http://127.0.0.1:5001
 ```
 
 ## 15. Inference Demo
