@@ -1,0 +1,10 @@
+schema_name,relation_name,relation_type,row_count,column_count,status
+staged,retailrocket_events,BASE TABLE,2756101,8,PASS
+staged,retailrocket_category_tree,BASE TABLE,1669,5,PASS
+staged,retailrocket_item_properties_selected,BASE TABLE,2291853,7,PASS
+staged,retailrocket_item_category_latest,BASE TABLE,417053,6,PASS
+staged,retailrocket_item_availability_latest,BASE TABLE,417053,7,PASS
+mart,retailrocket_interactions,VIEW,2756101,9,PASS
+mart,retailrocket_user_item_interactions,BASE TABLE,2145179,14,PASS
+mart,retailrocket_user_features,BASE TABLE,1407580,12,PASS
+mart,retailrocket_item_features,BASE TABLE,235061,18,PASS
