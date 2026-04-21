@@ -1,4 +1,4 @@
-# Recommart: Data Management Pipeline for ML-Based Recommendation
+# RecoMart: Data Management Pipeline for ML-Based Recommendation
 
 This project implements an end-to-end data management and machine learning pipeline for recommendation systems. It covers ingestion, inspection, validation, staged storage, DuckDB warehousing, feature engineering, feature registry concepts, model training, MLflow tracking, DVC versioning, inference, and Prefect orchestration.
 

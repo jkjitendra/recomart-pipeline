@@ -143,8 +143,8 @@ def write_orchestration_report(results: list[dict[str, Any]]) -> None:
     )
 
 
-@flow(name="retailrocket-recommart-pipeline")
-def retailrocket_recommart_pipeline() -> None:
+@flow(name="retailrocket-recomart-pipeline")
+def retailrocket_recomart_pipeline() -> None:
     results = []
 
     for step in PIPELINE_STEPS:
@@ -155,4 +155,4 @@ def retailrocket_recommart_pipeline() -> None:
 
 
 if __name__ == "__main__":
-    retailrocket_recommart_pipeline()
+    retailrocket_recomart_pipeline()

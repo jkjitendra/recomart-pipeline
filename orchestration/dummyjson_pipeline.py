@@ -149,7 +149,7 @@ def write_orchestration_report(rows: list[dict[str, Any]]) -> None:
     print(report_df[["step_order", "step_name", "status", "duration_seconds"]].to_string(index=False))
 
 
-@flow(name="dummyjson-recommart-pipeline")
+@flow(name="dummyjson-recomart-pipeline")
 def dummyjson_pipeline() -> None:
     rows = []
 

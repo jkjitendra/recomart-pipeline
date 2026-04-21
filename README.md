@@ -140,7 +140,7 @@ data/
     source=dummyjson.dvc
     source=retailrocket.dvc
   warehouse/
-    recommart.duckdb
+    recomart.duckdb
 
 logs/
   ingestion_dummyjson.log
@@ -158,7 +158,7 @@ reports/
   plots/
   screenshots/
   final_project_report.md
-  recommart_assignment_report.pdf
+  recomart_assignment_report.pdf
   reproducibility_commands.md
 
 sql/
@@ -317,12 +317,12 @@ sql/retailrocket_warehouse.sql
 
 Warehouse path:
 ```bash
-data/warehouse/recommart.duckdb
+data/warehouse/recomart.duckdb
 ```
 
 Example query:
 ```bash
-duckdb data/warehouse/recommart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
+duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
 ```
 
 ## 10. Feature Engineering
@@ -585,20 +585,20 @@ Important documentation outputs:
 ```bash
 reports/final_project_report.md
 reports/reproducibility_commands.md
-reports/recommart_assignment_report.pdf
+reports/recomart_assignment_report.pdf
 reports/plots/
 reports/screenshots/
 ```
 
 The main assignment PDF is:
 ```bash
-reports/recommart_assignment_report.pdf
+reports/recomart_assignment_report.pdf
 ```
 
 ## 18. How to Run the Full Project
 Step 1: Activate environment
 ```bash
-conda activate recommart
+conda activate recomart
 ```
 
 Step 2: Verify Git and DVC state
@@ -652,7 +652,7 @@ http://127.0.0.1:5001
 | Deliverable                    | Location                                       |
 | ------------------------------ | ---------------------------------------------- |
 | Source code                    | `src/`, `sql/`, `orchestration/`               |
-| Final PDF report               | `reports/recommart_assignment_report.pdf`      |
+| Final PDF report               | `reports/recomart_assignment_report.pdf`      |
 | Markdown report                | `reports/final_project_report.md`              |
 | Reproducibility commands       | `reports/reproducibility_commands.md`          |
 | Data quality reports           | `reports/data_quality/`                        |

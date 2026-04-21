@@ -7,7 +7,7 @@ import duckdb
 import pandas as pd
 
 
-WAREHOUSE_PATH = Path("data/warehouse/recommart.duckdb")
+WAREHOUSE_PATH = Path("data/warehouse/recomart.duckdb")
 MODEL_PATH = Path("models/retailrocket/popularity_recommender.pkl")
 
 RECOMMENDATION_OUTPUT_PATH = Path("reports/retailrocket_inference_demo_recommendations.csv")

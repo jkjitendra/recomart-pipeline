@@ -3,7 +3,7 @@
 ## Activate environment
 
 ```bash
-conda activate recommart
+conda activate recomart
 ```
 
 ## Check repository and DVC state
@@ -62,7 +62,7 @@ Open `http://127.0.0.1:5001`, then go to `model training → Experiments`.
 ## Check DuckDB warehouse
 
 ```bash
-duckdb data/warehouse/recommart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
+duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
 ```
 
 ## Regenerate final report

@@ -53,7 +53,7 @@ def generate_report() -> str:
 
     lines = []
 
-    lines.append("# Recommart: Data Management Pipeline for ML-Based Recommendation")
+    lines.append("# RecoMart: Data Management Pipeline for ML-Based Recommendation")
     lines.append("")
     lines.append(
         "This project implements an end-to-end data management and machine learning pipeline "
@@ -300,7 +300,7 @@ def generate_commands_doc() -> str:
     lines.append("## Activate environment")
     lines.append("")
     lines.append("```bash")
-    lines.append("conda activate recommart")
+    lines.append("conda activate recomart")
     lines.append("```")
 
     lines.append("")
@@ -367,7 +367,7 @@ def generate_commands_doc() -> str:
     lines.append("## Check DuckDB warehouse")
     lines.append("")
     lines.append("```bash")
-    lines.append('duckdb data/warehouse/recommart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"')
+    lines.append('duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"')
     lines.append("```")
 
     lines.append("")

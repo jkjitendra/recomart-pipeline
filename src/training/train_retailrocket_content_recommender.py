@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 
-WAREHOUSE_PATH = Path("data/warehouse/recommart.duckdb")
+WAREHOUSE_PATH = Path("data/warehouse/recomart.duckdb")
 
 MODEL_DIR = Path("models/retailrocket")
 MODEL_PATH = MODEL_DIR / "content_based_recommender.pkl"

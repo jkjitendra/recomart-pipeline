@@ -23,7 +23,7 @@ from reportlab.platypus import (
 )
 
 
-OUTPUT_PATH = Path("reports/recommart_assignment_report.pdf")
+OUTPUT_PATH = Path("reports/recomart_assignment_report.pdf")
 REPORTS_DIR = Path("reports")
 PLOTS_DIR = REPORTS_DIR / "plots"
 SCREENSHOTS_DIR = REPORTS_DIR / "screenshots"
@@ -547,7 +547,7 @@ def build_pdf() -> None:
     story.append(
         bullet_list(
             [
-                "Activate environment: conda activate recommart",
+                "Activate environment: conda activate recomart",
                 "Check version state: git status and dvc status",
                 "Restore tracked artifacts if remote is configured: dvc pull",
                 "Run DummyJSON flow: python -m orchestration.dummyjson_pipeline",

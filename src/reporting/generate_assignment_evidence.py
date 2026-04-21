@@ -13,7 +13,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 
 
-WAREHOUSE_PATH = Path("data/warehouse/recommart.duckdb")
+WAREHOUSE_PATH = Path("data/warehouse/recomart.duckdb")
 REPORTS_DIR = Path("reports")
 PLOTS_DIR = REPORTS_DIR / "plots"
 
@@ -497,7 +497,7 @@ def generate_repository_structure_summary() -> None:
             "path": "data/warehouse/",
             "purpose": "Local DuckDB analytical warehouse",
             "versioning": "Generated artifact, ignored by Git",
-            "example_files": "recommart.duckdb",
+            "example_files": "recomart.duckdb",
         },
         {
             "path": "models/",

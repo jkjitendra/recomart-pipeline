@@ -8,7 +8,7 @@ import pandas as pd
 import math
 
 
-WAREHOUSE_PATH = Path("data/warehouse/recommart.duckdb")
+WAREHOUSE_PATH = Path("data/warehouse/recomart.duckdb")
 
 MODEL_DIR = Path("models/retailrocket")
 MODEL_PATH = MODEL_DIR / "popularity_recommender.pkl"

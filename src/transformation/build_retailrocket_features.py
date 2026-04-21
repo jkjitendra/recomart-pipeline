@@ -5,7 +5,7 @@ import duckdb
 import pandas as pd
 
 
-WAREHOUSE_PATH = Path("data/warehouse/recommart.duckdb")
+WAREHOUSE_PATH = Path("data/warehouse/recomart.duckdb")
 SQL_PATH = Path("sql/retailrocket_features.sql")
 
 FEATURE_DIR = Path("data/features/source=retailrocket")
