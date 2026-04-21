@@ -259,6 +259,8 @@ def build_pdf() -> None:
     retail_warehouse = read_csv("reports/retailrocket_duckdb_load_summary.csv")
     retail_features = read_csv("reports/retailrocket_feature_summary.csv")
     retail_training = read_csv("reports/retailrocket_model_training_summary.csv")
+    retail_content_training = read_csv("reports/retailrocket_content_model_training_summary.csv")
+    retail_model_comparison = read_csv("reports/retailrocket_model_comparison.csv")
     retail_inference = read_csv("reports/retailrocket_inference_demo_summary.csv")
     retail_orchestration = read_csv("reports/orchestration_retailrocket_pipeline_summary.csv")
 
@@ -299,7 +301,7 @@ def build_pdf() -> None:
         ["Feature engineering and transformation", "Covered", "DuckDB SQL warehouse and feature tables"],
         ["Feature store", "Covered", "Custom registry and retrieval demo"],
         ["Data versioning and lineage", "Covered", "DVC metadata and versioning workflow"],
-        ["Model training and evaluation", "Covered", "Retailrocket model with HitRate, Precision, Recall, NDCG"],
+        ["Model training and evaluation", "Covered", "Retailrocket popularity baseline and content-based recommender with HitRate, Precision, Recall, NDCG"],
         ["Pipeline orchestration", "Covered", "Prefect flows and successful run logs"],
         ["Documentation and demo", "Covered", "Single PDF report, screenshots, video script"],
     ]
@@ -322,7 +324,7 @@ def build_pdf() -> None:
                 "Business problem: recommend relevant products to users based on interaction history and item metadata.",
                 "Expected outputs: clean EDA-ready datasets, feature tables, trained model artifact, inference interface.",
                 "Evaluation metrics: Precision@K, Recall@K, HitRate@K, and NDCG@K.",
-                "Main model: Retailrocket event-weighted popularity recommender with user-history filtering.",
+                "Implemented models: Retailrocket event-weighted popularity baseline and category/content-based recommender.",
             ],
             styles,
         )
@@ -450,12 +452,36 @@ def build_pdf() -> None:
     section_title("11. Model Training and Evaluation", story, styles)
     story.append(
         paragraph(
-            "The Retailrocket recommender is an event-weighted global popularity model. Event weights are: "
-            "view = 1, addtocart = 3, transaction = 5. A time-based train/test split is used.",
+            "The Retailrocket modeling stage includes two recommenders: an event-weighted global popularity baseline "
+            "and a category/content-based filtering model. Event weights are: view = 1, addtocart = 3, "
+            "transaction = 5. A time-based train/test split is used.",
             styles,
         )
     )
     story.append(df_to_table(retail_training, styles, max_rows=5, max_cols=12))
+    subsection_title("11.2 Content-Based Recommender", story, styles)
+    story.append(
+        paragraph(
+            "A second Retailrocket model was implemented using category/content-based filtering. "
+            "It builds user profiles from historical item categories and parent categories, then scores "
+            "candidate items using category similarity, availability metadata, conversion signals, and "
+            "a popularity prior. This directly addresses the assignment requirement for content-based filtering.",
+            styles,
+        )
+    )
+    story.append(df_to_table(retail_content_training, styles, max_rows=5, max_cols=12))
+
+    subsection_title("11.3 Model Comparison", story, styles)
+    story.append(df_to_table(retail_model_comparison, styles, max_rows=5, max_cols=10))
+    story.append(
+        KeepTogether(
+            image_block(
+                PLOTS_DIR / "retailrocket_model_comparison_metrics.png",
+                "Comparison of popularity baseline and content-based recommender metrics.",
+                styles,
+            )
+        )
+    )
     if not retail_training.empty:
         row = retail_training.iloc[0]
         story.append(
@@ -488,6 +514,7 @@ def build_pdf() -> None:
         ("mlflow_03_retailrocket_run_overview.png", "Retailrocket run overview."),
         ("mlflow_04_retailrocket_model_metrics.png", "Retailrocket metric details."),
         ("mlflow_05_dummyjson_runs_table.png", "DummyJSON runs table."),
+        ("mlflow_06_retailrocket_content_based_run.png", "Retailrocket content-based recommender run in MLflow."),
     ]
 
     for file_name, caption in screenshot_files:
@@ -535,7 +562,7 @@ def build_pdf() -> None:
     story.append(
         bullet_list(
             [
-                "Current Retailrocket model is a global popularity baseline, not fully personalized.",
+                "Current Retailrocket models are lightweight baselines; future work can add deeper personalized collaborative filtering.",
                 "Future work can add item-item collaborative filtering or matrix factorization.",
                 "Candidate generation can be improved using category and availability filtering.",
                 "A FastAPI serving endpoint and Streamlit monitoring dashboard can be added.",

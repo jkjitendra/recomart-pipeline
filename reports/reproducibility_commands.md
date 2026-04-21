@@ -37,6 +37,7 @@ python -m orchestration.retailrocket_pipeline
 
 ```bash
 python -m src.training.train_retailrocket_popularity_recommender
+python -m src.training.train_retailrocket_content_recommender
 ```
 
 ## Run Retailrocket inference
@@ -67,5 +68,8 @@ duckdb data/warehouse/recommart.duckdb "SELECT event_type, COUNT(*) FROM mart.re
 ## Regenerate final report
 
 ```bash
+python -m src.reporting.generate_assignment_evidence
+python -m src.reporting.generate_model_comparison
 python -m src.reporting.generate_final_report
+python -m src.reporting.generate_assignment_pdf
 ```

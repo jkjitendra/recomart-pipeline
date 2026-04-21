@@ -139,10 +139,23 @@ A custom feature registry was implemented for DummyJSON to demonstrate feature s
 | model_name                          | model_type                       |   top_k |   test_window_days |   evaluation_sample_users |   min_timestamp_ms |   max_timestamp_ms |   cutoff_timestamp_ms | min_event_datetime               | max_event_datetime               |   train_event_count |   test_event_count |   train_distinct_items |   model_saved_item_count |   model_item_coverage |   test_target_users |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 |
 |:------------------------------------|:---------------------------------|--------:|-------------------:|--------------------------:|-------------------:|-------------------:|----------------------:|:---------------------------------|:---------------------------------|--------------------:|-------------------:|-----------------------:|-------------------------:|----------------------:|--------------------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|
 | retailrocket_popularity_recommender | event_weighted_global_popularity |      10 |                 14 |                     10000 |      1430622004384 |      1442545187788 |         1441335587788 | 2015-05-03 08:30:04.384000+05:30 | 2015-09-18 08:29:47.788000+05:30 |             2509138 |             246963 |                 225427 |                     5000 |             0.0221801 |                3648 |              3648 |     49 |         0.013432 |         0.0013432 |       0.013432 |   0.00804606 |
-The Retailrocket model is an event-weighted global popularity recommender. Event weights are: `view = 1`, `addtocart = 3`, and `transaction = 5`.
+
+## 10.3 Retailrocket Content-Based Recommender
+| model_name                             | model_type                       |   top_k |   test_window_days |   evaluation_sample_users |   min_timestamp_ms |   max_timestamp_ms |   cutoff_timestamp_ms |   candidate_item_count |   test_target_users |   user_profile_count |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 |
+|:---------------------------------------|:---------------------------------|--------:|-------------------:|--------------------------:|-------------------:|-------------------:|----------------------:|-----------------------:|--------------------:|---------------------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|
+| retailrocket_content_based_recommender | category_content_based_filtering |      10 |                 14 |                     10000 |      1430622004384 |      1442545187788 |         1441335587788 |                   5000 |                3648 |                  517 |              3648 |     39 |        0.0106908 |        0.00106908 |      0.0106908 |   0.00429383 |
+The content-based recommender uses item category, parent category, availability metadata, conversion signals, and user category profiles to recommend items similar to a user's historical interests. This directly satisfies the assignment requirement for a content-based recommendation model.
+
+## 10.4 Retailrocket Model Comparison
+| model_family               | model_name                             | model_type                       |   top_k |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 |
+|:---------------------------|:---------------------------------------|:---------------------------------|--------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|
+| global_popularity_baseline | retailrocket_popularity_recommender    | event_weighted_global_popularity |      10 |              3648 |     49 |        0.013432  |        0.0013432  |      0.013432  |   0.00804606 |
+| content_based_filtering    | retailrocket_content_based_recommender | category_content_based_filtering |      10 |              3648 |     39 |        0.0106908 |        0.00106908 |      0.0106908 |   0.00429383 |
+The Retailrocket modeling stage includes two models. The first is an event-weighted global popularity baseline. The second is a category/content-based recommender that builds user profiles from historical category interactions and ranks candidate items using category similarity, metadata, conversion rates, and popularity prior. Event weights are: `view = 1`, `addtocart = 3`, and `transaction = 5`.
 
 # 11. Model Evaluation
-The Retailrocket model evaluated 3648 users and achieved HitRate@10 = 0.013432, Precision@10 = 0.001343, Recall@10 = 0.013432, NDCG@10 = 0.008046.
+The Retailrocket popularity baseline evaluated 3648 users and achieved HitRate@10 = 0.013432, Precision@10 = 0.001343, Recall@10 = 0.013432, NDCG@10 = 0.008046.
+The Retailrocket content-based recommender evaluated 3648 users and achieved HitRate@10 = 0.010691, Precision@10 = 0.001069, Recall@10 = 0.010691, NDCG@10 = 0.004294.
 NDCG@10 is included because it measures ranking quality. A hit at rank 1 receives more credit than a hit at rank 10.
 
 # 12. MLflow Experiment Tracking
@@ -197,7 +210,7 @@ The project can be reproduced by activating the environment, checking DVC state,
 
 
 # 18. Limitations and Future Work
-- Current model is a global popularity baseline
+- Current Retailrocket models are lightweight popularity and content-based baselines
 - Add personalized collaborative filtering
 - Add matrix factorization or item-item recommendations
 - Add FastAPI serving endpoint

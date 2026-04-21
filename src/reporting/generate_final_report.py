@@ -46,6 +46,8 @@ def generate_report() -> str:
     retail_warehouse = read_csv("reports/retailrocket_duckdb_load_summary.csv")
     retail_features = read_csv("reports/retailrocket_feature_summary.csv")
     retail_training = read_csv("reports/retailrocket_model_training_summary.csv")
+    retail_content_training = read_csv("reports/retailrocket_content_model_training_summary.csv")
+    retail_model_comparison = read_csv("reports/retailrocket_model_comparison.csv")
     retail_inference = read_csv("reports/retailrocket_inference_demo_summary.csv")
     retail_orchestration = read_csv("reports/orchestration_retailrocket_pipeline_summary.csv")
 
@@ -171,16 +173,40 @@ def generate_report() -> str:
     lines.append("\n## 10.2 Retailrocket Popularity Baseline")
     lines.append(table(retail_training))
 
+    lines.append("\n## 10.3 Retailrocket Content-Based Recommender")
+    lines.append(table(retail_content_training))
+
     lines.append(
-        "The Retailrocket model is an event-weighted global popularity recommender. Event weights are: "
-        "`view = 1`, `addtocart = 3`, and `transaction = 5`."
+        "The content-based recommender uses item category, parent category, availability metadata, "
+        "conversion signals, and user category profiles to recommend items similar to a user's historical "
+        "interests. This directly satisfies the assignment requirement for a content-based recommendation model."
+    )
+
+    lines.append("\n## 10.4 Retailrocket Model Comparison")
+    lines.append(table(retail_model_comparison))
+
+    lines.append(
+        "The Retailrocket modeling stage includes two models. The first is an event-weighted global "
+        "popularity baseline. The second is a category/content-based recommender that builds user profiles "
+        "from historical category interactions and ranks candidate items using category similarity, metadata, "
+        "conversion rates, and popularity prior. Event weights are: `view = 1`, `addtocart = 3`, and `transaction = 5`."
     )
 
     lines.append("\n# 11. Model Evaluation")
     if not retail_training.empty:
         row = retail_training.iloc[0]
         lines.append(
-            f"The Retailrocket model evaluated {int(row['evaluated_users'])} users and achieved "
+            f"The Retailrocket popularity baseline evaluated {int(row['evaluated_users'])} users and achieved "
+            f"HitRate@10 = {row['hit_rate_at_10']:.6f}, "
+            f"Precision@10 = {row['precision_at_10']:.6f}, "
+            f"Recall@10 = {row['recall_at_10']:.6f}, "
+            f"NDCG@10 = {row['ndcg_at_10']:.6f}."
+        )
+
+    if not retail_content_training.empty:
+        row = retail_content_training.iloc[0]
+        lines.append(
+            f"The Retailrocket content-based recommender evaluated {int(row['evaluated_users'])} users and achieved "
             f"HitRate@10 = {row['hit_rate_at_10']:.6f}, "
             f"Precision@10 = {row['precision_at_10']:.6f}, "
             f"Recall@10 = {row['recall_at_10']:.6f}, "
@@ -249,7 +275,7 @@ def generate_report() -> str:
 
     lines.append("\n# 18. Limitations and Future Work")
     lines.append(
-        "- Current model is a global popularity baseline\n"
+        "- Current Retailrocket models are lightweight popularity and content-based baselines\n"
         "- Add personalized collaborative filtering\n"
         "- Add matrix factorization or item-item recommendations\n"
         "- Add FastAPI serving endpoint\n"
@@ -313,6 +339,7 @@ def generate_commands_doc() -> str:
     lines.append("")
     lines.append("```bash")
     lines.append("python -m src.training.train_retailrocket_popularity_recommender")
+    lines.append("python -m src.training.train_retailrocket_content_recommender")
     lines.append("```")
 
     lines.append("")
@@ -347,7 +374,10 @@ def generate_commands_doc() -> str:
     lines.append("## Regenerate final report")
     lines.append("")
     lines.append("```bash")
+    lines.append("python -m src.reporting.generate_assignment_evidence")
+    lines.append("python -m src.reporting.generate_model_comparison")
     lines.append("python -m src.reporting.generate_final_report")
+    lines.append("python -m src.reporting.generate_assignment_pdf")
     lines.append("```")
 
     return "\n".join(lines)
