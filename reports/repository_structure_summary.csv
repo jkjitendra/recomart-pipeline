@@ -1,0 +1,12 @@
+path,purpose,versioning,example_files
+configs/feature_store/,Custom feature registry configuration,Git,dummyjson_feature_registry.json
+data/external/,External source datasets,DVC metadata in Git,retailrocket.dvc
+data/raw/,Raw API ingested data,Ignored by Git; reproducible through ingestion,source=dummyjson/type=*/ingest_date=*
+data/staged/,Cleaned staged Parquet datasets,DVC metadata in Git,"source=dummyjson.dvc, source=retailrocket.dvc"
+data/features/,ML feature datasets,DVC metadata in Git,"source=dummyjson.dvc, source=retailrocket.dvc"
+data/warehouse/,Local DuckDB analytical warehouse,"Generated artifact, ignored by Git",recommart.duckdb
+models/,Trained model artifacts,DVC metadata in Git,"dummyjson.dvc, retailrocket.dvc"
+reports/,"Reports, plots, screenshots, summaries",Git for lightweight files,"final_project_report.md, plots/, screenshots/"
+sql/,Warehouse and feature transformation SQL,Git,"retailrocket_warehouse.sql, retailrocket_features.sql"
+src/,Pipeline source code organized by stage,Git,"ingestion/, validation/, preparation/, transformation/, training/, serving/"
+orchestration/,Prefect pipeline definitions,Git,"dummyjson_pipeline.py, retailrocket_pipeline.py"
