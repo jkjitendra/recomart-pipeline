@@ -5,6 +5,7 @@ from typing import Any
 import duckdb
 import mlflow
 import pandas as pd
+import math
 
 
 WAREHOUSE_PATH = Path("data/warehouse/recommart.duckdb")
@@ -275,6 +276,15 @@ def evaluate_model(
     item_scores_df: pd.DataFrame,
     top_k: int,
 ) -> dict[str, Any]:
+    """
+    Evaluate top-K recommendations.
+
+    Metrics:
+    - HitRate@K: fraction of evaluated users where the target item appears in top-K.
+    - Precision@K: hits divided by total recommended slots.
+    - Recall@K: same as HitRate here because each user has one target item.
+    - NDCG@K: ranking-aware score. A hit at rank 1 is better than a hit at rank 10.
+    """
     if test_targets_df.empty:
         return {
             "evaluated_users": 0,
@@ -282,11 +292,13 @@ def evaluate_model(
             f"hit_rate_at_{top_k}": 0.0,
             f"precision_at_{top_k}": 0.0,
             f"recall_at_{top_k}": 0.0,
+            f"ndcg_at_{top_k}": 0.0,
         }
 
     item_ids_ranked = item_scores_df["item_id"].astype(int).tolist()
 
     hits = 0
+    ndcg_sum = 0.0
     evaluated_users = 0
 
     for row in test_targets_df.itertuples(index=False):
@@ -295,11 +307,11 @@ def evaluate_model(
 
         seen_items = train_seen_items.get(user_id, set())
 
-        recommendations = recommend_for_user(
-            item_ids_ranked=item_ids_ranked,
-            seen_items=seen_items,
-            top_k=top_k,
-        )
+        recommendations = [
+            item_id
+            for item_id in item_ids_ranked
+            if item_id not in seen_items
+        ][:top_k]
 
         if not recommendations:
             continue
@@ -309,9 +321,13 @@ def evaluate_model(
         if target_item_id in recommendations:
             hits += 1
 
+            rank = recommendations.index(target_item_id) + 1
+            ndcg_sum += 1.0 / math.log2(rank + 1)
+
     hit_rate = hits / evaluated_users if evaluated_users else 0.0
     precision = hits / (evaluated_users * top_k) if evaluated_users else 0.0
     recall = hit_rate
+    ndcg = ndcg_sum / evaluated_users if evaluated_users else 0.0
 
     return {
         "evaluated_users": evaluated_users,
@@ -319,6 +335,7 @@ def evaluate_model(
         f"hit_rate_at_{top_k}": hit_rate,
         f"precision_at_{top_k}": precision,
         f"recall_at_{top_k}": recall,
+        f"ndcg_at_{top_k}": ndcg,
     }
 
 
