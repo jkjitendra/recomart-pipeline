@@ -1,0 +1,37 @@
+dataset_name,check_name,status,details
+events,file_exists,PASS,Found file: data/staged/source=retailrocket/events.parquet
+events,read_parquet,PASS,Successfully read file with 2756101 rows and 8 columns
+events,required_columns,PASS,"All required columns found: ['event_timestamp_ms', 'event_datetime', 'visitor_id', 'event_type', 'item_id', 'transaction_id', '_source_system', '_source_file']"
+events,row_count_positive,PASS,Found 2756101 rows
+category_tree,file_exists,PASS,Found file: data/staged/source=retailrocket/category_tree.parquet
+category_tree,read_parquet,PASS,Successfully read file with 1669 rows and 5 columns
+category_tree,required_columns,PASS,"All required columns found: ['category_id', 'parent_category_id', 'is_root_category', '_source_system', '_source_file']"
+category_tree,row_count_positive,PASS,Found 1669 rows
+item_properties_selected,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_selected.parquet
+item_properties_selected,read_parquet,PASS,Successfully read file with 2291853 rows and 7 columns
+item_properties_selected,required_columns,PASS,"All required columns found: ['property_timestamp_ms', 'property_datetime', 'item_id', 'property_name', 'property_value', '_source_part', '_source_system']"
+item_properties_selected,row_count_positive,PASS,Found 2291853 rows
+item_category_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_category_latest.parquet
+item_category_latest,read_parquet,PASS,Successfully read file with 417053 rows and 6 columns
+item_category_latest,required_columns,PASS,"All required columns found: ['item_id', 'category_id', 'category_timestamp_ms', 'category_datetime', '_source_system', '_source_file']"
+item_category_latest,row_count_positive,PASS,Found 417053 rows
+item_availability_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_availability_latest.parquet
+item_availability_latest,read_parquet,PASS,Successfully read file with 417053 rows and 7 columns
+item_availability_latest,required_columns,PASS,"All required columns found: ['item_id', 'available_raw_value', 'is_available', 'availability_timestamp_ms', 'availability_datetime', '_source_system', '_source_file']"
+item_availability_latest,row_count_positive,PASS,Found 417053 rows
+events,valid_event_types,PASS,Only expected event types found
+events,null_timestamp,PASS,No nulls found
+events,null_visitor,PASS,No nulls found
+events,null_event_type,PASS,No nulls found
+events,null_item,PASS,No nulls found
+events,transaction_rows_have_transaction_id,PASS,All transaction rows have transaction_id
+events,non_transaction_rows_without_transaction_id,PASS,Non-transaction rows do not have transaction_id
+events,event_type_distribution,PASS,"[{'event_type': 'view', 'row_count': 2664312}, {'event_type': 'addtocart', 'row_count': 69332}, {'event_type': 'transaction', 'row_count': 22457}]"
+category_tree,unique_category_id,PASS,No duplicate category_id values
+category_tree,root_category_flag,PASS,Root category flag is consistent
+item_properties_selected,selected_property_names,PASS,Only categoryid and available are present
+item_category_latest,unique_item_id,PASS,One latest category row per item
+item_availability_latest,unique_item_id,PASS,One latest availability row per item
+item_availability_latest,valid_availability_values,PASS,All availability values are 0 or 1
+referential_coverage,event_items_with_category,PASS,185246/235061 event items have latest category coverage (0.7881)
+referential_coverage,event_items_with_availability,PASS,185246/235061 event items have latest availability coverage (0.7881)
