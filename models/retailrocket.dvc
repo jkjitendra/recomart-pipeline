@@ -1,0 +1,6 @@
+outs:
+- md5: 178e800810471794deb30d09dfd9b21e.dir
+  size: 637110
+  nfiles: 1
+  hash: md5
+  path: retailrocket
