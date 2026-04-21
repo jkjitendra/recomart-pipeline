@@ -18,3 +18,4 @@ fastapi
 uvicorn
 loguru
 tqdm
+reportlab
