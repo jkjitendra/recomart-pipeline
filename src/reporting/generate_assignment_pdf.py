@@ -247,12 +247,6 @@ def build_pdf() -> None:
     styles = make_styles()
     story: list = []
 
-    dummy_raw = read_csv("reports/dummyjson_raw_summary.csv")
-    dummy_validation = read_csv("reports/data_quality/dummyjson_staged_validation_report.csv")
-    dummy_features = read_csv("reports/dummyjson_feature_summary.csv")
-    dummy_training = read_csv("reports/model_training_summary.csv")
-    dummy_orchestration = read_csv("reports/orchestration_dummyjson_pipeline_summary.csv")
-
     retail_external = read_csv("reports/retailrocket_external_summary.csv")
     retail_events = read_csv("reports/retailrocket_event_type_summary.csv")
     retail_validation = read_csv("reports/data_quality/retailrocket_staged_validation_report.csv")
@@ -294,7 +288,7 @@ def build_pdf() -> None:
     section_title("1. Assignment Requirement Coverage", story, styles)
     coverage_rows = [
         ["Problem formulation", "Covered", "Business problem, objectives, outputs, metrics"],
-        ["Data collection and ingestion", "Covered", "DummyJSON API and Retailrocket CSV data"],
+        ["Data collection and ingestion", "Covered", "Retailrocket batch CSV data and planned REST catalog metadata delta source"],
         ["Raw data storage", "Covered", "Local data lake layout with source/type/date structure"],
         ["Data profiling and validation", "Covered", "Automated validation scripts and reports"],
         ["Data preparation and EDA", "Covered", "Prepared Parquet datasets and summary plots"],
@@ -331,11 +325,7 @@ def build_pdf() -> None:
     )
 
     section_title("3. Data Sources", story, styles)
-    subsection_title("3.1 DummyJSON API Source", story, styles)
-    story.append(paragraph("DummyJSON provides API-based products, users, and carts data for a small pipeline demo.", styles))
-    story.append(df_to_table(dummy_raw, styles, max_rows=8, max_cols=5))
-
-    subsection_title("3.2 Retailrocket External Dataset", story, styles)
+    subsection_title("3.1 Retailrocket External Dataset", story, styles)
     story.append(
         paragraph(
             "Retailrocket is the main large-scale dataset. It includes visitor-item events, item properties, "
@@ -350,19 +340,19 @@ def build_pdf() -> None:
     section_title("4. Ingestion, Raw Storage, and Logging", story, styles)
     story.append(
         paragraph(
-            "The ingestion layer includes API ingestion for DummyJSON and external batch ingestion for Retailrocket. "
-            "Data is stored in a structured local data lake. DummyJSON raw files are partitioned by source, type, "
-            "and ingest date. Retailrocket source data is tracked by DVC as an external dataset.",
+            "The ingestion layer is being refactored around Retailrocket batch ingestion and Retailrocket REST "
+            "catalog metadata deltas. Retailrocket source data is tracked by DVC as an external dataset, and "
+            "raw ingestion snapshots are stored in a structured local data lake layout.",
             styles,
         )
     )
     story.append(
         bullet_list(
             [
-                "DummyJSON ingestion script: src/ingestion/fetch_dummyjson.py",
                 "Retailrocket inspection script: src/ingestion/inspect_retailrocket_external.py",
-                "Ingestion log evidence: logs/ingestion_dummyjson.log",
-                "Raw storage layout: data/raw/source=dummyjson/type=*/ingest_date=*",
+                "Retailrocket batch ingestion script planned: src/ingestion/ingest_retailrocket_batch.py",
+                "Retailrocket API ingestion script planned: src/ingestion/ingest_retailrocket_catalog_api.py",
+                "Raw storage layout: data/raw/source=retailrocket_batch/ and data/raw/source=retailrocket_api/",
                 "External storage layout: data/external/retailrocket",
             ],
             styles,
@@ -370,13 +360,6 @@ def build_pdf() -> None:
     )
 
     section_title("5. Data Validation and Quality Reports", story, styles)
-    subsection_title("5.1 DummyJSON Validation", story, styles)
-    if not dummy_validation.empty and "status" in dummy_validation.columns:
-        story.append(df_to_table(dummy_validation.groupby("status").size().reset_index(name="check_count"), styles))
-    else:
-        story.append(paragraph("DummyJSON validation summary not available.", styles))
-
-    subsection_title("5.2 Retailrocket Validation", story, styles)
     if not retail_validation.empty and "status" in retail_validation.columns:
         story.append(df_to_table(retail_validation.groupby("status").size().reset_index(name="check_count"), styles))
     else:
@@ -504,7 +487,7 @@ def build_pdf() -> None:
     story.append(
         paragraph(
             "MLflow stores run IDs, parameters, metrics, and artifacts. Screenshots below show successful experiment "
-            "tracking for DummyJSON and Retailrocket.",
+            "tracking for Retailrocket models.",
             styles,
         )
     )
@@ -513,7 +496,6 @@ def build_pdf() -> None:
         ("mlflow_02_retailrocket_runs_table.png", "Retailrocket runs table with metrics."),
         ("mlflow_03_retailrocket_run_overview.png", "Retailrocket run overview."),
         ("mlflow_04_retailrocket_model_metrics.png", "Retailrocket metric details."),
-        ("mlflow_05_dummyjson_runs_table.png", "DummyJSON runs table."),
         ("mlflow_06_retailrocket_content_based_run.png", "Retailrocket content-based recommender run in MLflow."),
     ]
 
@@ -538,9 +520,6 @@ def build_pdf() -> None:
             styles,
         )
     )
-    subsection_title("14.1 DummyJSON Orchestration", story, styles)
-    story.append(df_to_table(dummy_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=12, max_cols=4))
-    subsection_title("14.2 Retailrocket Orchestration", story, styles)
     story.append(df_to_table(retail_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=12, max_cols=4))
 
     section_title("15. Reproducibility Workflow", story, styles)
@@ -550,7 +529,6 @@ def build_pdf() -> None:
                 "Activate environment: conda activate recomart",
                 "Check version state: git status and dvc status",
                 "Restore tracked artifacts if remote is configured: dvc pull",
-                "Run DummyJSON flow: python -m orchestration.dummyjson_pipeline",
                 "Run Retailrocket flow: python -m orchestration.retailrocket_pipeline",
                 "Open MLflow UI using the tracking URI from Python: mlflow ui --backend-store-uri \"$TRACKING_URI\" --port 5001",
             ],

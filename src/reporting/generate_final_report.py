@@ -34,12 +34,6 @@ def choose_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
 
 
 def generate_report() -> str:
-    dummy_raw = read_csv("reports/dummyjson_raw_summary.csv")
-    dummy_validation = read_csv("reports/data_quality/dummyjson_staged_validation_report.csv")
-    dummy_features = read_csv("reports/dummyjson_feature_summary.csv")
-    dummy_training = read_csv("reports/model_training_summary.csv")
-    dummy_orchestration = read_csv("reports/orchestration_dummyjson_pipeline_summary.csv")
-
     retail_external = read_csv("reports/retailrocket_external_summary.csv")
     retail_events = read_csv("reports/retailrocket_event_type_summary.csv")
     retail_validation = read_csv("reports/data_quality/retailrocket_staged_validation_report.csv")
@@ -53,87 +47,77 @@ def generate_report() -> str:
 
     lines = []
 
-    lines.append("# RecoMart: Data Management Pipeline for ML-Based Recommendation")
+    lines.append("# RecoMart: Retailrocket Recommendation Data Pipeline")
     lines.append("")
     lines.append(
-        "This project implements an end-to-end data management and machine learning pipeline "
-        "for recommendation systems. It covers ingestion, inspection, validation, staged storage, "
-        "DuckDB warehousing, feature engineering, feature registry concepts, model training, "
-        "MLflow tracking, DVC versioning, inference, and Prefect orchestration."
+        "RecoMart is a reproducible ML data pipeline for Retailrocket recommendation data. "
+        "It covers data inspection, validation, staged storage, DuckDB warehousing, feature "
+        "engineering, model training, MLflow tracking, DVC versioning, inference, and Prefect orchestration."
     )
 
     lines.append("\n# 1. Project Objective")
     lines.append(
-        "The objective is to build a reproducible ML data pipeline that converts raw recommendation "
-        "data into validated features and trained recommender models. DummyJSON is used as a small "
-        "API-based demo dataset, while Retailrocket is used as the main large-scale recommendation dataset."
+        "The objective is to convert Retailrocket interaction and catalog metadata into validated "
+        "features and trained recommender models for e-commerce recommendation use cases."
     )
 
-    lines.append("\n# 2. Tools Used and Why")
+    lines.append("\n# 2. Tools Used")
     lines.append(
         "| Tool | Usage |\n"
         "|---|---|\n"
         "| Python | Main implementation language |\n"
         "| pandas | Data inspection, summaries, reports |\n"
-        "| DuckDB | Local analytical warehouse and SQL transformation engine |\n"
-        "| Parquet | Efficient staged and feature storage format |\n"
+        "| DuckDB | Local analytical warehouse and SQL transformations |\n"
+        "| Parquet | Staged and feature storage format |\n"
         "| DVC | Versioning large datasets and model artifacts |\n"
         "| Git | Versioning source code and lightweight reports |\n"
         "| MLflow | Experiment tracking and metric logging |\n"
         "| Prefect | Pipeline orchestration |\n"
-        "| Docker | Available for containerized execution |\n"
     )
 
     lines.append("\n# 3. Repository Structure")
     lines.append(
         "```text\n"
         "configs/          Feature registry configuration\n"
-        "data/external/    Retailrocket source data tracked by DVC\n"
-        "data/raw/         DummyJSON API data\n"
-        "data/staged/      Cleaned Parquet datasets tracked by DVC\n"
-        "data/features/    ML feature datasets tracked by DVC\n"
-        "data/warehouse/   DuckDB local warehouse\n"
-        "models/           Trained model artifacts tracked by DVC\n"
-        "reports/          CSV summaries, final report, screenshots\n"
-        "sql/              DuckDB SQL scripts\n"
+        "data/external/    Retailrocket source archive tracked by DVC\n"
+        "data/raw/         Raw ingestion snapshots; populated in the ingestion refactor\n"
+        "data/staged/      Cleaned Retailrocket Parquet datasets tracked by DVC\n"
+        "data/curated/     Curated analytical datasets; populated in the preparation refactor\n"
+        "data/features/    Retailrocket ML feature datasets tracked by DVC\n"
+        "data/warehouse/   Generated DuckDB local warehouse\n"
+        "models/           Retailrocket model artifacts tracked by DVC\n"
+        "reports/          CSV summaries, plots, final report, screenshots\n"
+        "sql/              Retailrocket DuckDB SQL scripts\n"
         "src/              Python modules\n"
         "orchestration/    Prefect flows\n"
         "```"
     )
 
-    lines.append("\n# 4. Dataset Summary")
-    lines.append("\n## 4.1 DummyJSON Raw Summary")
-    lines.append(table(dummy_raw))
-
-    lines.append("\n## 4.2 Retailrocket External Summary")
+    lines.append("\n# 4. Retailrocket Dataset Summary")
     lines.append(table(retail_external))
 
-    lines.append("\n## 4.3 Retailrocket Event Distribution")
+    lines.append("\n## 4.1 Retailrocket Event Distribution")
     lines.append(table(retail_events))
 
     lines.append("\n# 5. Pipeline Architecture")
     lines.append(
         "```text\n"
-        "Raw/API/External Data\n"
-        "  → Inspection\n"
-        "  → Validation\n"
-        "  → Staged Parquet\n"
-        "  → DuckDB Warehouse\n"
-        "  → Feature Tables\n"
-        "  → Model Training + MLflow\n"
-        "  → Model Artifacts + DVC\n"
-        "  → Inference Demo\n"
-        "  → Prefect Orchestration\n"
+        "External Retailrocket Source Archive\n"
+        "  -> Raw Ingestion Layer\n"
+        "  -> Validation\n"
+        "  -> Staged Parquet\n"
+        "  -> Curated Analytical Data\n"
+        "  -> DuckDB Warehouse\n"
+        "  -> Feature Tables\n"
+        "  -> Model Training + MLflow\n"
+        "  -> Model Artifacts + DVC\n"
+        "  -> Inference Demo\n"
+        "  -> Prefect Orchestration\n"
         "```"
     )
 
     lines.append("\n# 6. Data Quality Validation")
-    lines.append("\n## 6.1 DummyJSON Validation Summary")
-    lines.append(status_summary(dummy_validation))
-
-    lines.append("\n## 6.2 Retailrocket Validation Summary")
     lines.append(status_summary(retail_validation))
-
     lines.append(
         "Retailrocket validation checks include file existence, required columns, row counts, valid event types, "
         "transaction ID consistency, category metadata coverage, availability metadata coverage, and uniqueness "
@@ -141,19 +125,10 @@ def generate_report() -> str:
     )
 
     lines.append("\n# 7. DuckDB Warehouse")
-    lines.append(
-        "DuckDB is used as a local analytical warehouse. Staged Parquet files are loaded into structured tables "
-        "and transformed into mart-level recommendation tables."
-    )
     lines.append(table(retail_warehouse))
 
     lines.append("\n# 8. Feature Engineering")
-    lines.append("\n## 8.1 DummyJSON Feature Summary")
-    lines.append(table(dummy_features))
-
-    lines.append("\n## 8.2 Retailrocket Feature Summary")
     lines.append(table(retail_features))
-
     lines.append(
         "Retailrocket features include user-level behavior, item-level popularity and metadata, and user-item "
         "interaction features such as event counts, implicit labels, and strongest event type."
@@ -161,36 +136,23 @@ def generate_report() -> str:
 
     lines.append("\n# 9. Feature Registry")
     lines.append(
-        "A custom feature registry was implemented for DummyJSON to demonstrate feature store concepts. "
-        "It maps entities, feature views, source Parquet paths, and intended use cases such as training, "
-        "batch inference, and candidate filtering."
+        "A Retailrocket feature registry and retrieval demo are part of the planned feature-store refactor. "
+        "The current feature tables are already generated under `data/features/source=retailrocket/`."
     )
 
     lines.append("\n# 10. Model Training")
-    lines.append("\n## 10.1 DummyJSON Popularity Baseline")
-    lines.append(table(dummy_training))
-
-    lines.append("\n## 10.2 Retailrocket Popularity Baseline")
+    lines.append("\n## 10.1 Retailrocket Popularity Baseline")
     lines.append(table(retail_training))
 
-    lines.append("\n## 10.3 Retailrocket Content-Based Recommender")
+    lines.append("\n## 10.2 Retailrocket Content-Based Recommender")
     lines.append(table(retail_content_training))
-
     lines.append(
         "The content-based recommender uses item category, parent category, availability metadata, "
-        "conversion signals, and user category profiles to recommend items similar to a user's historical "
-        "interests. This directly satisfies the assignment requirement for a content-based recommendation model."
+        "conversion signals, and user category profiles to recommend items similar to a user's historical interests."
     )
 
-    lines.append("\n## 10.4 Retailrocket Model Comparison")
+    lines.append("\n## 10.3 Retailrocket Model Comparison")
     lines.append(table(retail_model_comparison))
-
-    lines.append(
-        "The Retailrocket modeling stage includes two models. The first is an event-weighted global "
-        "popularity baseline. The second is a category/content-based recommender that builds user profiles "
-        "from historical category interactions and ranks candidate items using category similarity, metadata, "
-        "conversion rates, and popularity prior. Event weights are: `view = 1`, `addtocart = 3`, and `transaction = 5`."
-    )
 
     lines.append("\n# 11. Model Evaluation")
     if not retail_training.empty:
@@ -212,42 +174,23 @@ def generate_report() -> str:
             f"Recall@10 = {row['recall_at_10']:.6f}, "
             f"NDCG@10 = {row['ndcg_at_10']:.6f}."
         )
-    lines.append(
-        "NDCG@10 is included because it measures ranking quality. A hit at rank 1 receives more credit "
-        "than a hit at rank 10."
-    )
 
     lines.append("\n# 12. MLflow Experiment Tracking")
     lines.append(
-        "MLflow was used to log model parameters, metrics, reports, and artifacts. Screenshots of the UI "
-        "are stored in `reports/screenshots/`."
+        "MLflow logs Retailrocket model parameters, metrics, reports, and artifacts. Screenshots are stored "
+        "in `reports/screenshots/`."
     )
 
     lines.append("\n# 13. DVC Versioning")
     lines.append(
-        "DVC tracks external data, staged data, feature data, and model artifacts. This keeps Git lightweight "
-        "while preserving reproducibility for large files."
+        "DVC tracks Retailrocket external data, staged data, feature data, and model artifacts. "
+        "This keeps Git lightweight while preserving reproducibility for large files."
     )
 
     lines.append("\n# 14. Inference Demo")
     lines.append(table(retail_inference))
-    lines.append(
-        "The Retailrocket inference script loads the trained model and generates recommendations for default "
-        "active users, a single user, or custom comma-separated users. Previously interacted items are filtered."
-    )
 
     lines.append("\n# 15. Orchestration")
-    lines.append("\n## 15.1 DummyJSON Prefect Flow")
-    lines.append(
-        table(
-            choose_columns(
-                dummy_orchestration,
-                ["step_order", "step_name", "status", "duration_seconds"],
-            )
-        )
-    )
-
-    lines.append("\n## 15.2 Retailrocket Prefect Flow")
     lines.append(
         table(
             choose_columns(
@@ -259,34 +202,23 @@ def generate_report() -> str:
 
     lines.append("\n# 16. Reproducibility")
     lines.append(
-        "The project can be reproduced by activating the environment, checking DVC state, restoring artifacts "
-        "if a DVC remote is configured, and running the Prefect orchestration scripts."
+        "The project can be reproduced by activating the `recomart` environment, checking Git/DVC state, "
+        "restoring artifacts if a DVC remote is configured, and running the Retailrocket pipeline commands."
     )
 
-    lines.append("\n# 17. Team Work Division")
+    lines.append("\n# 17. Limitations and Future Work")
     lines.append(
-        "| Team Member | Responsibility |\n"
-        "|---|---|\n"
-        "| Member 1 | Data ingestion and inspection |\n"
-        "| Member 2 | Data preparation, validation, and DVC tracking |\n"
-        "| Member 3 | DuckDB warehouse and feature engineering |\n"
-        "| Member 4 | MLflow, training, inference, orchestration, and final reporting |\n"
+        "- Add Retailrocket raw batch ingestion and REST catalog-delta ingestion\n"
+        "- Add curated analytical datasets\n"
+        "- Add a Retailrocket feature registry and retrieval demo\n"
+        "- Add scheduled REST ingestion with Prefect deployment documentation\n"
+        "- Regenerate the final assignment PDF after the refactor is complete"
     )
 
-    lines.append("\n# 18. Limitations and Future Work")
+    lines.append("\n# 18. Conclusion")
     lines.append(
-        "- Current Retailrocket models are lightweight popularity and content-based baselines\n"
-        "- Add personalized collaborative filtering\n"
-        "- Add matrix factorization or item-item recommendations\n"
-        "- Add FastAPI serving endpoint\n"
-        "- Add Streamlit monitoring dashboard\n"
-        "- Add scheduled orchestration"
-    )
-
-    lines.append("\n# 19. Conclusion")
-    lines.append(
-        "The project successfully demonstrates a reproducible ML data management pipeline for recommendation "
-        "systems using modern tools such as DuckDB, DVC, MLflow, and Prefect."
+        "The current Retailrocket pipeline demonstrates a reproducible ML data management workflow and is being "
+        "refactored into the final Retailrocket batch plus REST API assignment architecture."
     )
 
     return "\n".join(lines)
@@ -317,18 +249,9 @@ def generate_commands_doc() -> str:
     lines.append("```bash")
     lines.append("dvc pull")
     lines.append("```")
-    lines.append("")
-    lines.append("If no DVC remote is configured, the DVC cache must already exist locally.")
 
     lines.append("")
-    lines.append("## Run DummyJSON pipeline")
-    lines.append("")
-    lines.append("```bash")
-    lines.append("python -m orchestration.dummyjson_pipeline")
-    lines.append("```")
-
-    lines.append("")
-    lines.append("## Run Retailrocket pipeline")
+    lines.append("## Run current Retailrocket pipeline")
     lines.append("")
     lines.append("```bash")
     lines.append("python -m orchestration.retailrocket_pipeline")
@@ -352,18 +275,6 @@ def generate_commands_doc() -> str:
     lines.append("```")
 
     lines.append("")
-    lines.append("## Open MLflow UI")
-    lines.append("")
-    lines.append("Use the same MLflow tracking URI used by the training scripts.")
-    lines.append("")
-    lines.append("```bash")
-    lines.append("TRACKING_URI=$(python -c 'import mlflow; print(mlflow.get_tracking_uri())')")
-    lines.append('mlflow ui --backend-store-uri "$TRACKING_URI" --port 5001')
-    lines.append("```")
-    lines.append("")
-    lines.append("Open `http://127.0.0.1:5001`, then go to `model training → Experiments`.")
-
-    lines.append("")
     lines.append("## Check DuckDB warehouse")
     lines.append("")
     lines.append("```bash")
@@ -371,7 +282,7 @@ def generate_commands_doc() -> str:
     lines.append("```")
 
     lines.append("")
-    lines.append("## Regenerate final report")
+    lines.append("## Regenerate reports")
     lines.append("")
     lines.append("```bash")
     lines.append("python -m src.reporting.generate_assignment_evidence")

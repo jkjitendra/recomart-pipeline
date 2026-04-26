@@ -1,8 +1,0 @@
-pipeline_layer,description,dvc_file,tracked_path,md5,size_bytes,nfiles,versioning_tool,tracked_in_git
-external_data,Retailrocket original external CSV dataset,data/external/retailrocket.dvc,retailrocket,19cdee87944c59fc15c51396fe37cd88.dir,987498023,4,DVC,True
-staged_data,DummyJSON staged Parquet data,data/staged/source=dummyjson.dvc,source=dummyjson,4c949baf4d1f10f63deb33acfaee42db.dir,152717,4,DVC,True
-feature_data,DummyJSON feature Parquet data,data/features/source=dummyjson.dvc,source=dummyjson,c49242017c40e790059bbf13fa924e98.dir,41299,3,DVC,True
-model_artifact,DummyJSON trained popularity model,models/dummyjson.dvc,dummyjson,26596e9e6569b24edc95075f03ae88af.dir,29199,1,DVC,True
-staged_data,Retailrocket staged Parquet data,data/staged/source=retailrocket.dvc,source=retailrocket,2896e046e1755c12b6e21c445da0a2af.dir,80572198,5,DVC,True
-feature_data,Retailrocket feature Parquet data,data/features/source=retailrocket.dvc,source=retailrocket,8b21fd5e8ab42536cd855a1f96b85c37.dir,147337179,3,DVC,True
-model_artifact,Retailrocket trained popularity model,models/retailrocket.dvc,retailrocket,ddfd4f90db7b60b49908097e66e97917.dir,1227304,2,DVC,True

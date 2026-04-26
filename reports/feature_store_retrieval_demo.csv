@@ -1,4 +1,0 @@
-retrieval_type,entity_filter,rows_returned,columns_returned,source_feature_view
-user_features,user_id=1,1,14,dummyjson_user_features
-item_features,item_id=86,1,21,dummyjson_item_features
-interaction_features,"user_id=2,item_id=86",1,16,dummyjson_interaction_features

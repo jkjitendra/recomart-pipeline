@@ -247,10 +247,10 @@ def generate_feature_logic_summary() -> None:
             "used_for": "Interpretability and behavioral analysis",
         },
         {
-            "feature_group": "dummyjson_feature_registry",
-            "feature_or_group": "user, item, interaction feature views",
-            "source": "configs/feature_store/dummyjson_feature_registry.json",
-            "logic": "Custom registry maps feature views to entities, source paths, and intended usage.",
+            "feature_group": "retailrocket_feature_registry",
+            "feature_or_group": "user, item, user-item feature views",
+            "source": "configs/feature_store/retailrocket_feature_registry.json",
+            "logic": "Custom registry maps Retailrocket feature views to entities, source paths, versions, and intended usage.",
             "used_for": "Feature store demonstration",
         },
     ]
@@ -307,24 +307,6 @@ def generate_feature_metadata_documentation() -> None:
             "entity": "user_id,item_id",
             "source_path": "data/features/source=retailrocket/user_item_features.parquet",
             "used_for": "training, implicit feedback modeling",
-        },
-        {
-            "feature_view_name": "dummyjson_user_features",
-            "entity": "user_id",
-            "source_path": "data/features/source=dummyjson/user_features.parquet",
-            "used_for": "training, batch inference",
-        },
-        {
-            "feature_view_name": "dummyjson_item_features",
-            "entity": "item_id",
-            "source_path": "data/features/source=dummyjson/item_features.parquet",
-            "used_for": "training, batch inference, candidate filtering",
-        },
-        {
-            "feature_view_name": "dummyjson_interaction_features",
-            "entity": "user_id,item_id,cart_id",
-            "source_path": "data/features/source=dummyjson/interaction_features.parquet",
-            "used_for": "training",
         },
     ]
 
@@ -391,21 +373,6 @@ def generate_dvc_versioning_summary() -> None:
         },
         {
             "pipeline_layer": "staged_data",
-            "description": "DummyJSON staged Parquet data",
-            "file": Path("data/staged/source=dummyjson.dvc"),
-        },
-        {
-            "pipeline_layer": "feature_data",
-            "description": "DummyJSON feature Parquet data",
-            "file": Path("data/features/source=dummyjson.dvc"),
-        },
-        {
-            "pipeline_layer": "model_artifact",
-            "description": "DummyJSON trained popularity model",
-            "file": Path("models/dummyjson.dvc"),
-        },
-        {
-            "pipeline_layer": "staged_data",
             "description": "Retailrocket staged Parquet data",
             "file": Path("data/staged/source=retailrocket.dvc"),
         },
@@ -467,7 +434,7 @@ def generate_repository_structure_summary() -> None:
             "path": "configs/feature_store/",
             "purpose": "Custom feature registry configuration",
             "versioning": "Git",
-            "example_files": "dummyjson_feature_registry.json",
+            "example_files": "retailrocket_feature_registry.json",
         },
         {
             "path": "data/external/",
@@ -477,21 +444,21 @@ def generate_repository_structure_summary() -> None:
         },
         {
             "path": "data/raw/",
-            "purpose": "Raw API ingested data",
+            "purpose": "Raw Retailrocket ingestion snapshots",
             "versioning": "Ignored by Git; reproducible through ingestion",
-            "example_files": "source=dummyjson/type=*/ingest_date=*",
+            "example_files": "source=retailrocket_batch/, source=retailrocket_api/",
         },
         {
             "path": "data/staged/",
             "purpose": "Cleaned staged Parquet datasets",
             "versioning": "DVC metadata in Git",
-            "example_files": "source=dummyjson.dvc, source=retailrocket.dvc",
+            "example_files": "source=retailrocket.dvc",
         },
         {
             "path": "data/features/",
             "purpose": "ML feature datasets",
             "versioning": "DVC metadata in Git",
-            "example_files": "source=dummyjson.dvc, source=retailrocket.dvc",
+            "example_files": "source=retailrocket.dvc",
         },
         {
             "path": "data/warehouse/",
@@ -500,10 +467,16 @@ def generate_repository_structure_summary() -> None:
             "example_files": "recomart.duckdb",
         },
         {
+            "path": "data/curated/",
+            "purpose": "Curated Retailrocket analytical datasets",
+            "versioning": "DVC metadata when generated",
+            "example_files": "source=retailrocket/",
+        },
+        {
             "path": "models/",
             "purpose": "Trained model artifacts",
             "versioning": "DVC metadata in Git",
-            "example_files": "dummyjson.dvc, retailrocket.dvc",
+            "example_files": "retailrocket.dvc",
         },
         {
             "path": "reports/",
@@ -527,7 +500,7 @@ def generate_repository_structure_summary() -> None:
             "path": "orchestration/",
             "purpose": "Prefect pipeline definitions",
             "versioning": "Git",
-            "example_files": "dummyjson_pipeline.py, retailrocket_pipeline.py",
+            "example_files": "retailrocket_pipeline.py",
         },
     ]
 

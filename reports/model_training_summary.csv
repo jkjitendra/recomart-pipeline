@@ -1,2 +1,0 @@
-model_name,model_type,top_k,total_interactions,train_interactions,test_interactions,unique_users,unique_items_in_interactions,catalog_items,recommended_item_count,recommended_catalog_item_count,catalog_item_coverage,interaction_item_coverage,evaluated_users,hits,hit_rate_at_10,precision_at_10,recall_at_10
-popularity_recommender,global_popularity_baseline,10,378,278,100,100,171,100,150,80,0.8,0.8771929824561403,100,2,0.02,0.002,0.02

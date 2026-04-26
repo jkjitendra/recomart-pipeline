@@ -9,7 +9,6 @@ import pandas as pd
 TRACKING_DB = Path("mlflow.db").resolve()
 TRACKING_URI = f"sqlite:///{TRACKING_DB}"
 
-DUMMY_EXPERIMENT = "dummyjson_recommendation_baselines"
 RETAIL_EXPERIMENT = "retailrocket_recommendation_models"
 
 
@@ -24,37 +23,6 @@ def log_artifacts(paths: list[str]) -> None:
         file_path = Path(path)
         if file_path.exists():
             mlflow.log_artifact(str(file_path))
-
-
-def recreate_dummyjson_popularity_run() -> None:
-    summary_path = Path("reports/model_training_summary.csv")
-    if not summary_path.exists():
-        print(f"Skipping DummyJSON run. Missing: {summary_path}")
-        return
-
-    df = pd.read_csv(summary_path)
-    row = df.iloc[0]
-
-    mlflow.set_experiment(DUMMY_EXPERIMENT)
-
-    with mlflow.start_run(run_name="dummyjson_popularity_recommender") as run:
-        mlflow.log_param("model_name", "popularity_recommender")
-        mlflow.log_param("model_type", "global_popularity_baseline")
-        mlflow.log_param("dataset", "dummyjson")
-        mlflow.log_param("top_k", int(row.get("top_k", 10)))
-
-        log_metrics_from_row(row)
-
-        log_artifacts(
-            [
-                "models/dummyjson/popularity_recommender.pkl",
-                "reports/model_training_summary.csv",
-                "reports/recommendation_examples.csv",
-                "reports/popularity_item_scores.csv",
-            ]
-        )
-
-        print("Recreated DummyJSON MLflow run:", run.info.run_id)
 
 
 def recreate_retailrocket_popularity_run() -> None:
@@ -126,7 +94,6 @@ def main() -> None:
 
     print("Using MLflow tracking URI:", mlflow.get_tracking_uri())
 
-    recreate_dummyjson_popularity_run()
     recreate_retailrocket_popularity_run()
     recreate_retailrocket_content_run()
 
