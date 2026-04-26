@@ -1,6 +1,6 @@
 # RecoMart Recommendation Data Pipeline
 
-RecoMart is a reproducible data management pipeline for recommendation modeling on the Retailrocket dataset. The project currently focuses on Retailrocket interaction and catalog metadata, with the REST catalog-delta ingestion layer planned in the next refactor phase.
+RecoMart is a reproducible data management pipeline for recommendation modeling on the Retailrocket dataset. The project ingests Retailrocket batch CSV data and supports a Retailrocket catalog metadata delta REST API source.
 
 ## Project Scope
 
@@ -21,7 +21,7 @@ RecoMart uses Retailrocket data to build a local ML data pipeline:
 ```text
 configs/          Feature registry configuration
 data/external/    DVC-tracked Retailrocket source archive
-data/raw/         Raw ingestion layer; Retailrocket raw ingestion is added in Phase 2
+data/raw/         Raw Retailrocket ingestion snapshots
 data/staged/      Cleaned Retailrocket Parquet datasets tracked by DVC
 data/curated/     Curated analytical layer; populated in Phase 3
 data/features/    Retailrocket ML feature datasets tracked by DVC
@@ -45,6 +45,66 @@ If running commands without activating the environment, use:
 
 ```bash
 conda run -n recomart <command>
+```
+
+## Retailrocket Raw Ingestion
+
+Raw data uses this partition convention everywhere:
+
+```text
+data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+Run Retailrocket batch ingestion from the external source archive:
+
+```bash
+python -m src.ingestion.ingest_retailrocket_batch
+```
+
+Batch ingestion lands:
+
+```text
+data/raw/source=retailrocket_batch/type=events/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_batch/type=item_properties_part1/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_batch/type=category_tree/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+Run Retailrocket catalog API ingestion in mock/local mode:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+API ingestion lands:
+
+```text
+data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+Catalog API environment variables:
+
+```text
+RECOMART_CATALOG_API_BASE_URL
+RECOMART_CATALOG_API_ENDPOINT
+RECOMART_CATALOG_API_TIMEOUT_SEC
+RECOMART_CATALOG_API_PAGE_SIZE
+RECOMART_CATALOG_API_AUTH_TOKEN
+RECOMART_CATALOG_API_STATE_FILE
+RECOMART_CATALOG_API_MOCK_MODE
+```
+
+Default page size is 10 records per run. Cursor state is stored in `data/raw/source=retailrocket_api/_state/item_properties_delta_state.json` unless `RECOMART_CATALOG_API_STATE_FILE` is set.
+
+The mock/demo API serves records from `data/external/retailrocket/item_properties_part2.csv` with a compatible endpoint:
+
+```bash
+uvicorn src.ingestion.mock_retailrocket_catalog_api:app --host 127.0.0.1 --port 8000
+```
+
+Then run the client against it:
+
+```bash
+RECOMART_CATALOG_API_BASE_URL=http://127.0.0.1:8000 python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
 ## Retailrocket Commands
@@ -135,6 +195,8 @@ This branch is moving the project to the final assignment story:
 The following layers are completed or already present:
 
 - Retailrocket external source archive
+- Retailrocket batch raw ingestion
+- Retailrocket REST/mock API raw ingestion
 - Retailrocket staged data
 - Retailrocket DuckDB warehouse
 - Retailrocket feature tables
@@ -145,8 +207,6 @@ The following layers are completed or already present:
 
 The following layers are planned for the next phases:
 
-- Retailrocket batch raw ingestion
-- Retailrocket REST catalog-delta ingestion
 - Raw validation
 - Curated analytical datasets
 - Retailrocket feature registry and retrieval demo
