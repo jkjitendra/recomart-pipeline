@@ -197,7 +197,9 @@ The following layers are completed or already present:
 - Retailrocket external source archive
 - Retailrocket batch raw ingestion
 - Retailrocket REST/mock API raw ingestion
+- Retailrocket raw validation
 - Retailrocket staged data
+- Retailrocket curated analytical datasets
 - Retailrocket DuckDB warehouse
 - Retailrocket feature tables
 - Retailrocket popularity recommender
@@ -207,8 +209,6 @@ The following layers are completed or already present:
 
 The following layers are planned for the next phases:
 
-- Raw validation
-- Curated analytical datasets
 - Retailrocket feature registry and retrieval demo
 - Retailrocket-only final report and PDF regeneration
 - Clean rebuild workflow

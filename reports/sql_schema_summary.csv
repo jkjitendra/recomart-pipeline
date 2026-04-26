@@ -1,0 +1,224 @@
+schema_name,table_name,column_name,ordinal_position,data_type,is_nullable
+curated,retailrocket_interactions,user_id,1,BIGINT,YES
+curated,retailrocket_interactions,item_id,2,BIGINT,YES
+curated,retailrocket_interactions,event_type,3,VARCHAR,YES
+curated,retailrocket_interactions,event_timestamp_ms,4,BIGINT,YES
+curated,retailrocket_interactions,event_datetime,5,TIMESTAMP WITH TIME ZONE,YES
+curated,retailrocket_interactions,transaction_id,6,BIGINT,YES
+curated,retailrocket_interactions,interaction_weight,7,"DECIMAL(2,1)",YES
+curated,retailrocket_interactions,category_id,8,BIGINT,YES
+curated,retailrocket_interactions,parent_category_id,9,BIGINT,YES
+curated,retailrocket_interactions,is_available,10,INTEGER,YES
+curated,retailrocket_interactions,available_raw_value,11,VARCHAR,YES
+curated,retailrocket_interactions,has_category_metadata,12,INTEGER,YES
+curated,retailrocket_interactions,has_availability_metadata,13,INTEGER,YES
+curated,retailrocket_items,item_id,1,BIGINT,YES
+curated,retailrocket_items,total_events,2,BIGINT,YES
+curated,retailrocket_items,unique_users,3,BIGINT,YES
+curated,retailrocket_items,view_events,4,DOUBLE,YES
+curated,retailrocket_items,addtocart_events,5,DOUBLE,YES
+curated,retailrocket_items,transaction_events,6,DOUBLE,YES
+curated,retailrocket_items,first_event_timestamp_ms,7,BIGINT,YES
+curated,retailrocket_items,last_event_timestamp_ms,8,BIGINT,YES
+curated,retailrocket_items,first_event_datetime,9,TIMESTAMP WITH TIME ZONE,YES
+curated,retailrocket_items,last_event_datetime,10,TIMESTAMP WITH TIME ZONE,YES
+curated,retailrocket_items,category_id,11,BIGINT,YES
+curated,retailrocket_items,parent_category_id,12,BIGINT,YES
+curated,retailrocket_items,is_available,13,INTEGER,YES
+curated,retailrocket_items,available_raw_value,14,VARCHAR,YES
+curated,retailrocket_items,has_category_metadata,15,INTEGER,YES
+curated,retailrocket_items,has_availability_metadata,16,INTEGER,YES
+curated,retailrocket_user_item_interactions,user_id,1,BIGINT,YES
+curated,retailrocket_user_item_interactions,item_id,2,BIGINT,YES
+curated,retailrocket_user_item_interactions,total_events,3,BIGINT,YES
+curated,retailrocket_user_item_interactions,view_count,4,DOUBLE,YES
+curated,retailrocket_user_item_interactions,addtocart_count,5,DOUBLE,YES
+curated,retailrocket_user_item_interactions,transaction_count,6,DOUBLE,YES
+curated,retailrocket_user_item_interactions,interaction_score,7,"DECIMAL(38,1)",YES
+curated,retailrocket_user_item_interactions,max_event_weight,8,"DECIMAL(2,1)",YES
+curated,retailrocket_user_item_interactions,first_event_timestamp_ms,9,BIGINT,YES
+curated,retailrocket_user_item_interactions,last_event_timestamp_ms,10,BIGINT,YES
+curated,retailrocket_user_item_interactions,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+curated,retailrocket_user_item_interactions,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+curated,retailrocket_user_item_interactions,category_id,13,BIGINT,YES
+curated,retailrocket_user_item_interactions,parent_category_id,14,BIGINT,YES
+curated,retailrocket_user_item_interactions,is_available,15,INTEGER,YES
+curated,retailrocket_user_item_interactions,has_category_metadata,16,INTEGER,YES
+curated,retailrocket_user_item_interactions,has_availability_metadata,17,INTEGER,YES
+curated,retailrocket_user_item_interactions,has_transaction,18,INTEGER,YES
+curated,retailrocket_user_item_interactions,has_addtocart,19,INTEGER,YES
+features,retailrocket_item_features,item_id,1,BIGINT,YES
+features,retailrocket_item_features,total_events,2,BIGINT,YES
+features,retailrocket_item_features,unique_users,3,BIGINT,YES
+features,retailrocket_item_features,view_events,4,DOUBLE,YES
+features,retailrocket_item_features,addtocart_events,5,DOUBLE,YES
+features,retailrocket_item_features,transaction_events,6,DOUBLE,YES
+features,retailrocket_item_features,total_interaction_score,7,DOUBLE,YES
+features,retailrocket_item_features,avg_interaction_weight,8,DOUBLE,YES
+features,retailrocket_item_features,first_event_timestamp_ms,9,BIGINT,YES
+features,retailrocket_item_features,last_event_timestamp_ms,10,BIGINT,YES
+features,retailrocket_item_features,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+features,retailrocket_item_features,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+features,retailrocket_item_features,category_id,13,BIGINT,YES
+features,retailrocket_item_features,parent_category_id,14,BIGINT,YES
+features,retailrocket_item_features,is_available,15,INTEGER,YES
+features,retailrocket_item_features,available_raw_value,16,VARCHAR,YES
+features,retailrocket_item_features,has_category_metadata,17,INTEGER,YES
+features,retailrocket_item_features,has_availability_metadata,18,INTEGER,YES
+features,retailrocket_item_features,addtocart_rate,19,DOUBLE,YES
+features,retailrocket_item_features,transaction_rate,20,DOUBLE,YES
+features,retailrocket_item_features,cart_to_transaction_rate,21,DOUBLE,YES
+features,retailrocket_user_features,user_id,1,BIGINT,YES
+features,retailrocket_user_features,total_events,2,BIGINT,YES
+features,retailrocket_user_features,unique_items,3,BIGINT,YES
+features,retailrocket_user_features,view_events,4,HUGEINT,YES
+features,retailrocket_user_features,addtocart_events,5,HUGEINT,YES
+features,retailrocket_user_features,transaction_events,6,HUGEINT,YES
+features,retailrocket_user_features,total_interaction_score,7,"DECIMAL(38,1)",YES
+features,retailrocket_user_features,avg_interaction_weight,8,DOUBLE,YES
+features,retailrocket_user_features,first_event_timestamp_ms,9,BIGINT,YES
+features,retailrocket_user_features,last_event_timestamp_ms,10,BIGINT,YES
+features,retailrocket_user_features,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+features,retailrocket_user_features,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+features,retailrocket_user_features,active_days,13,BIGINT,YES
+features,retailrocket_user_features,addtocart_event_rate,14,DOUBLE,YES
+features,retailrocket_user_features,transaction_event_rate,15,DOUBLE,YES
+features,retailrocket_user_features,events_per_unique_item,16,DOUBLE,YES
+features,retailrocket_user_item_features,user_id,1,BIGINT,YES
+features,retailrocket_user_item_features,item_id,2,BIGINT,YES
+features,retailrocket_user_item_features,total_events,3,BIGINT,YES
+features,retailrocket_user_item_features,view_count,4,DOUBLE,YES
+features,retailrocket_user_item_features,addtocart_count,5,DOUBLE,YES
+features,retailrocket_user_item_features,transaction_count,6,DOUBLE,YES
+features,retailrocket_user_item_features,interaction_score,7,"DECIMAL(38,1)",YES
+features,retailrocket_user_item_features,max_event_weight,8,"DECIMAL(2,1)",YES
+features,retailrocket_user_item_features,first_event_timestamp_ms,9,BIGINT,YES
+features,retailrocket_user_item_features,last_event_timestamp_ms,10,BIGINT,YES
+features,retailrocket_user_item_features,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+features,retailrocket_user_item_features,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+features,retailrocket_user_item_features,has_transaction,13,INTEGER,YES
+features,retailrocket_user_item_features,has_addtocart,14,INTEGER,YES
+features,retailrocket_user_item_features,category_id,15,BIGINT,YES
+features,retailrocket_user_item_features,parent_category_id,16,BIGINT,YES
+features,retailrocket_user_item_features,is_available,17,INTEGER,YES
+features,retailrocket_user_item_features,has_category_metadata,18,INTEGER,YES
+features,retailrocket_user_item_features,has_availability_metadata,19,INTEGER,YES
+features,retailrocket_user_item_features,user_item_addtocart_rate,20,DOUBLE,YES
+features,retailrocket_user_item_features,user_item_transaction_rate,21,DOUBLE,YES
+features,retailrocket_user_item_features,user_item_cart_to_transaction_rate,22,DOUBLE,YES
+features,retailrocket_user_item_features,implicit_label,23,"DECIMAL(2,1)",YES
+features,retailrocket_user_item_features,strongest_event_type,24,VARCHAR,YES
+mart,retailrocket_interactions,user_id,1,BIGINT,YES
+mart,retailrocket_interactions,item_id,2,BIGINT,YES
+mart,retailrocket_interactions,event_type,3,VARCHAR,YES
+mart,retailrocket_interactions,event_timestamp_ms,4,BIGINT,YES
+mart,retailrocket_interactions,event_datetime,5,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_interactions,transaction_id,6,BIGINT,YES
+mart,retailrocket_interactions,interaction_weight,7,"DECIMAL(2,1)",YES
+mart,retailrocket_interactions,category_id,8,BIGINT,YES
+mart,retailrocket_interactions,parent_category_id,9,BIGINT,YES
+mart,retailrocket_interactions,is_available,10,INTEGER,YES
+mart,retailrocket_interactions,available_raw_value,11,VARCHAR,YES
+mart,retailrocket_interactions,has_category_metadata,12,INTEGER,YES
+mart,retailrocket_interactions,has_availability_metadata,13,INTEGER,YES
+mart,retailrocket_item_features,item_id,1,BIGINT,YES
+mart,retailrocket_item_features,total_events,2,BIGINT,YES
+mart,retailrocket_item_features,unique_users,3,BIGINT,YES
+mart,retailrocket_item_features,view_events,4,DOUBLE,YES
+mart,retailrocket_item_features,addtocart_events,5,DOUBLE,YES
+mart,retailrocket_item_features,transaction_events,6,DOUBLE,YES
+mart,retailrocket_item_features,total_interaction_score,7,DOUBLE,YES
+mart,retailrocket_item_features,avg_interaction_weight,8,DOUBLE,YES
+mart,retailrocket_item_features,first_event_timestamp_ms,9,BIGINT,YES
+mart,retailrocket_item_features,last_event_timestamp_ms,10,BIGINT,YES
+mart,retailrocket_item_features,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_item_features,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_item_features,category_id,13,BIGINT,YES
+mart,retailrocket_item_features,parent_category_id,14,BIGINT,YES
+mart,retailrocket_item_features,is_available,15,INTEGER,YES
+mart,retailrocket_item_features,available_raw_value,16,VARCHAR,YES
+mart,retailrocket_item_features,has_category_metadata,17,INTEGER,YES
+mart,retailrocket_item_features,has_availability_metadata,18,INTEGER,YES
+mart,retailrocket_user_features,user_id,1,BIGINT,YES
+mart,retailrocket_user_features,total_events,2,BIGINT,YES
+mart,retailrocket_user_features,unique_items,3,BIGINT,YES
+mart,retailrocket_user_features,view_events,4,HUGEINT,YES
+mart,retailrocket_user_features,addtocart_events,5,HUGEINT,YES
+mart,retailrocket_user_features,transaction_events,6,HUGEINT,YES
+mart,retailrocket_user_features,total_interaction_score,7,"DECIMAL(38,1)",YES
+mart,retailrocket_user_features,avg_interaction_weight,8,DOUBLE,YES
+mart,retailrocket_user_features,first_event_timestamp_ms,9,BIGINT,YES
+mart,retailrocket_user_features,last_event_timestamp_ms,10,BIGINT,YES
+mart,retailrocket_user_features,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_user_features,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_user_item_interactions,user_id,1,BIGINT,YES
+mart,retailrocket_user_item_interactions,item_id,2,BIGINT,YES
+mart,retailrocket_user_item_interactions,total_events,3,BIGINT,YES
+mart,retailrocket_user_item_interactions,view_count,4,DOUBLE,YES
+mart,retailrocket_user_item_interactions,addtocart_count,5,DOUBLE,YES
+mart,retailrocket_user_item_interactions,transaction_count,6,DOUBLE,YES
+mart,retailrocket_user_item_interactions,interaction_score,7,"DECIMAL(38,1)",YES
+mart,retailrocket_user_item_interactions,max_event_weight,8,"DECIMAL(2,1)",YES
+mart,retailrocket_user_item_interactions,first_event_timestamp_ms,9,BIGINT,YES
+mart,retailrocket_user_item_interactions,last_event_timestamp_ms,10,BIGINT,YES
+mart,retailrocket_user_item_interactions,first_event_datetime,11,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_user_item_interactions,last_event_datetime,12,TIMESTAMP WITH TIME ZONE,YES
+mart,retailrocket_user_item_interactions,category_id,13,BIGINT,YES
+mart,retailrocket_user_item_interactions,parent_category_id,14,BIGINT,YES
+mart,retailrocket_user_item_interactions,is_available,15,INTEGER,YES
+mart,retailrocket_user_item_interactions,has_category_metadata,16,INTEGER,YES
+mart,retailrocket_user_item_interactions,has_availability_metadata,17,INTEGER,YES
+mart,retailrocket_user_item_interactions,has_transaction,18,INTEGER,YES
+mart,retailrocket_user_item_interactions,has_addtocart,19,INTEGER,YES
+staged,retailrocket_category_tree,category_id,1,BIGINT,YES
+staged,retailrocket_category_tree,parent_category_id,2,BIGINT,YES
+staged,retailrocket_category_tree,is_root_category,3,INTEGER,YES
+staged,retailrocket_category_tree,_source_system,4,VARCHAR,YES
+staged,retailrocket_category_tree,_source_file,5,VARCHAR,YES
+staged,retailrocket_events,event_timestamp_ms,1,BIGINT,YES
+staged,retailrocket_events,event_datetime,2,TIMESTAMP WITH TIME ZONE,YES
+staged,retailrocket_events,visitor_id,3,BIGINT,YES
+staged,retailrocket_events,event_type,4,VARCHAR,YES
+staged,retailrocket_events,item_id,5,BIGINT,YES
+staged,retailrocket_events,transaction_id,6,BIGINT,YES
+staged,retailrocket_events,_source_system,7,VARCHAR,YES
+staged,retailrocket_events,_source_file,8,VARCHAR,YES
+staged,retailrocket_item_availability_latest,item_id,1,BIGINT,YES
+staged,retailrocket_item_availability_latest,available_raw_value,2,VARCHAR,YES
+staged,retailrocket_item_availability_latest,is_available,3,INTEGER,YES
+staged,retailrocket_item_availability_latest,availability_timestamp_ms,4,BIGINT,YES
+staged,retailrocket_item_availability_latest,availability_datetime,5,TIMESTAMP WITH TIME ZONE,YES
+staged,retailrocket_item_availability_latest,_source_system,6,VARCHAR,YES
+staged,retailrocket_item_availability_latest,_source_file,7,VARCHAR,YES
+staged,retailrocket_item_category_latest,item_id,1,BIGINT,YES
+staged,retailrocket_item_category_latest,category_id,2,BIGINT,YES
+staged,retailrocket_item_category_latest,category_timestamp_ms,3,BIGINT,YES
+staged,retailrocket_item_category_latest,category_datetime,4,TIMESTAMP WITH TIME ZONE,YES
+staged,retailrocket_item_category_latest,_source_system,5,VARCHAR,YES
+staged,retailrocket_item_category_latest,_source_file,6,VARCHAR,YES
+staged,retailrocket_item_properties_api_delta,property_timestamp_ms,1,BIGINT,YES
+staged,retailrocket_item_properties_api_delta,property_datetime,2,TIMESTAMP WITH TIME ZONE,YES
+staged,retailrocket_item_properties_api_delta,item_id,3,BIGINT,YES
+staged,retailrocket_item_properties_api_delta,property_name,4,VARCHAR,YES
+staged,retailrocket_item_properties_api_delta,property_value,5,VARCHAR,YES
+staged,retailrocket_item_properties_api_delta,source_feed,6,VARCHAR,YES
+staged,retailrocket_item_properties_api_delta,source_system,7,VARCHAR,YES
+staged,retailrocket_item_properties_api_delta,source_file,8,VARCHAR,YES
+staged,retailrocket_item_properties_api_delta,ingestion_timestamp,9,VARCHAR,YES
+staged,retailrocket_item_properties_batch,property_timestamp_ms,1,BIGINT,YES
+staged,retailrocket_item_properties_batch,property_datetime,2,TIMESTAMP WITH TIME ZONE,YES
+staged,retailrocket_item_properties_batch,item_id,3,BIGINT,YES
+staged,retailrocket_item_properties_batch,property_name,4,VARCHAR,YES
+staged,retailrocket_item_properties_batch,property_value,5,VARCHAR,YES
+staged,retailrocket_item_properties_batch,source_feed,6,VARCHAR,YES
+staged,retailrocket_item_properties_batch,source_system,7,VARCHAR,YES
+staged,retailrocket_item_properties_batch,source_file,8,VARCHAR,YES
+staged,retailrocket_item_properties_combined,property_timestamp_ms,1,BIGINT,YES
+staged,retailrocket_item_properties_combined,property_datetime,2,TIMESTAMP WITH TIME ZONE,YES
+staged,retailrocket_item_properties_combined,item_id,3,BIGINT,YES
+staged,retailrocket_item_properties_combined,property_name,4,VARCHAR,YES
+staged,retailrocket_item_properties_combined,property_value,5,VARCHAR,YES
+staged,retailrocket_item_properties_combined,source_feed,6,VARCHAR,YES
+staged,retailrocket_item_properties_combined,source_system,7,VARCHAR,YES
+staged,retailrocket_item_properties_combined,source_file,8,VARCHAR,YES
+staged,retailrocket_item_properties_combined,ingestion_timestamp,9,VARCHAR,YES

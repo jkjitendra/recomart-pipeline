@@ -8,14 +8,20 @@ import pandas as pd
 WAREHOUSE_PATH = Path("data/warehouse/recomart.duckdb")
 SQL_PATH = Path("sql/retailrocket_warehouse.sql")
 REPORT_PATH = Path("reports/retailrocket_duckdb_load_summary.csv")
+SQL_SCHEMA_SUMMARY_PATH = Path("reports/sql_schema_summary.csv")
 
 
 RELATIONS = [
     ("staged", "retailrocket_events"),
     ("staged", "retailrocket_category_tree"),
-    ("staged", "retailrocket_item_properties_selected"),
+    ("staged", "retailrocket_item_properties_batch"),
+    ("staged", "retailrocket_item_properties_api_delta"),
+    ("staged", "retailrocket_item_properties_combined"),
     ("staged", "retailrocket_item_category_latest"),
     ("staged", "retailrocket_item_availability_latest"),
+    ("curated", "retailrocket_interactions"),
+    ("curated", "retailrocket_items"),
+    ("curated", "retailrocket_user_item_interactions"),
     ("mart", "retailrocket_interactions"),
     ("mart", "retailrocket_user_item_interactions"),
     ("mart", "retailrocket_user_features"),
@@ -122,6 +128,22 @@ def build_summary(connection: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def build_sql_schema_summary(connection: duckdb.DuckDBPyConnection) -> pd.DataFrame:
+    query = """
+        SELECT
+            table_schema AS schema_name,
+            table_name,
+            column_name,
+            ordinal_position,
+            data_type,
+            is_nullable
+        FROM information_schema.columns
+        WHERE table_schema IN ('staged', 'curated', 'mart', 'features')
+        ORDER BY table_schema, table_name, ordinal_position
+    """
+    return connection.execute(query).fetchdf()
+
+
 def main() -> None:
     ensure_prerequisites()
 
@@ -130,13 +152,16 @@ def main() -> None:
     with duckdb.connect(str(WAREHOUSE_PATH)) as connection:
         connection.execute(sql_text)
         summary_df = build_summary(connection)
+        schema_summary_df = build_sql_schema_summary(connection)
 
     summary_df.to_csv(REPORT_PATH, index=False)
+    schema_summary_df.to_csv(SQL_SCHEMA_SUMMARY_PATH, index=False)
 
     print("Retailrocket DuckDB warehouse load completed.")
     print(f"Warehouse path: {WAREHOUSE_PATH}")
     print(f"SQL file executed: {SQL_PATH}")
     print(f"Load summary saved: {REPORT_PATH}")
+    print(f"SQL schema summary saved: {SQL_SCHEMA_SUMMARY_PATH}")
     print()
     print(summary_df.to_string(index=False))
 

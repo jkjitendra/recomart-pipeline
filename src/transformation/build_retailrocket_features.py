@@ -14,6 +14,7 @@ ITEM_FEATURES_PATH = FEATURE_DIR / "item_features.parquet"
 USER_ITEM_FEATURES_PATH = FEATURE_DIR / "user_item_features.parquet"
 
 REPORT_PATH = Path("reports/retailrocket_feature_summary.csv")
+SQL_SCHEMA_SUMMARY_PATH = Path("reports/sql_schema_summary.csv")
 
 
 FEATURE_TABLES = [
@@ -132,6 +133,22 @@ def build_summary(connection: duckdb.DuckDBPyConnection) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def build_sql_schema_summary(connection: duckdb.DuckDBPyConnection) -> pd.DataFrame:
+    query = """
+        SELECT
+            table_schema AS schema_name,
+            table_name,
+            column_name,
+            ordinal_position,
+            data_type,
+            is_nullable
+        FROM information_schema.columns
+        WHERE table_schema IN ('staged', 'curated', 'mart', 'features')
+        ORDER BY table_schema, table_name, ordinal_position
+    """
+    return connection.execute(query).fetchdf()
+
+
 def main() -> None:
     ensure_prerequisites()
 
@@ -140,14 +157,17 @@ def main() -> None:
     with duckdb.connect(str(WAREHOUSE_PATH)) as connection:
         connection.execute(sql_text)
         summary_df = build_summary(connection)
+        schema_summary_df = build_sql_schema_summary(connection)
 
     summary_df.to_csv(REPORT_PATH, index=False)
+    schema_summary_df.to_csv(SQL_SCHEMA_SUMMARY_PATH, index=False)
 
     print("Retailrocket feature build completed.")
     print(f"Warehouse path: {WAREHOUSE_PATH}")
     print(f"Feature SQL executed: {SQL_PATH}")
     print(f"Feature directory: {FEATURE_DIR}")
     print(f"Feature summary saved: {REPORT_PATH}")
+    print(f"SQL schema summary saved: {SQL_SCHEMA_SUMMARY_PATH}")
     print()
     print(summary_df.to_string(index=False))
 
