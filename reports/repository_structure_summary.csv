@@ -10,4 +10,4 @@ models/,Trained model artifacts,DVC metadata in Git,retailrocket.dvc
 reports/,"Reports, plots, screenshots, summaries",Git for lightweight files,"final_project_report.md, plots/, screenshots/"
 sql/,Warehouse and feature transformation SQL,Git,"retailrocket_warehouse.sql, retailrocket_features.sql"
 src/,Pipeline source code organized by stage,Git,"ingestion/, validation/, preparation/, transformation/, training/, serving/"
-orchestration/,Prefect pipeline definitions,Git,retailrocket_pipeline.py
+orchestration/,Prefect pipeline definitions,Git,"retailrocket_pipeline.py, retailrocket_api_ingestion_flow.py"

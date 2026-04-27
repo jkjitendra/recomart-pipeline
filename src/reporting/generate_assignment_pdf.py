@@ -205,6 +205,21 @@ def df_to_table(
     return table
 
 
+def choose_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    if df.empty:
+        return df
+    return df[[column for column in columns if column in df.columns]]
+
+
+def validation_warning_details(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty or "status" not in df.columns:
+        return pd.DataFrame()
+    return choose_columns(
+        df[df["status"] == "WARN"].copy(),
+        ["dataset_name", "check_name", "status", "details"],
+    )
+
+
 def image_block(
     image_path: Path,
     caption: str,
@@ -249,7 +264,10 @@ def build_pdf() -> None:
 
     retail_external = read_csv("reports/retailrocket_external_summary.csv")
     retail_events = read_csv("reports/retailrocket_event_type_summary.csv")
+    raw_validation = read_csv("reports/data_quality/retailrocket_raw_validation_report.csv")
     retail_validation = read_csv("reports/data_quality/retailrocket_staged_validation_report.csv")
+    preparation = read_csv("reports/retailrocket_preparation_summary.csv")
+    curated = read_csv("reports/retailrocket_curated_summary.csv")
     retail_warehouse = read_csv("reports/retailrocket_duckdb_load_summary.csv")
     retail_features = read_csv("reports/retailrocket_feature_summary.csv")
     retail_training = read_csv("reports/retailrocket_model_training_summary.csv")
@@ -266,7 +284,7 @@ def build_pdf() -> None:
     feature_retrieval = read_csv("reports/feature_store_retrieval_demo.csv")
 
     story.append(Spacer(1, 1.0 * inch))
-    story.append(Paragraph("RecoMart Recommendation Pipeline", styles["title"]))
+    story.append(Paragraph("RecoMart Retailrocket Recommendation Pipeline", styles["title"]))
     story.append(
         Paragraph(
             "Data Management for Machine Learning - Assignment I<br/>"
@@ -288,10 +306,10 @@ def build_pdf() -> None:
     section_title("1. Assignment Requirement Coverage", story, styles)
     coverage_rows = [
         ["Problem formulation", "Covered", "Business problem, objectives, outputs, metrics"],
-        ["Data collection and ingestion", "Covered", "Retailrocket batch CSV data and planned REST catalog metadata delta source"],
-        ["Raw data storage", "Covered", "Local data lake layout with source/type/date structure"],
-        ["Data profiling and validation", "Covered", "Automated validation scripts and reports"],
-        ["Data preparation and EDA", "Covered", "Prepared Parquet datasets and summary plots"],
+        ["Data collection and ingestion", "Covered", "Retailrocket batch CSV data and REST/mock catalog metadata delta source"],
+        ["Raw data storage", "Covered", "Partitioned data lake using source/type/ingestion_timestamp"],
+        ["Data profiling and validation", "Covered", "Raw, staged, and curated validation scripts and reports"],
+        ["Data preparation and EDA", "Covered", "Staged Parquet, curated datasets, and summary plots"],
         ["Feature engineering and transformation", "Covered", "DuckDB SQL warehouse and feature tables"],
         ["Feature store", "Covered", "Custom registry and retrieval demo"],
         ["Data versioning and lineage", "Covered", "DVC metadata and versioning workflow"],
@@ -340,7 +358,7 @@ def build_pdf() -> None:
     section_title("4. Ingestion, Raw Storage, and Logging", story, styles)
     story.append(
         paragraph(
-            "The ingestion layer is being refactored around Retailrocket batch ingestion and Retailrocket REST "
+            "The ingestion layer contains Retailrocket batch ingestion and Retailrocket REST/mock "
             "catalog metadata deltas. Retailrocket source data is tracked by DVC as an external dataset, and "
             "raw ingestion snapshots are stored in a structured local data lake layout.",
             styles,
@@ -350,9 +368,12 @@ def build_pdf() -> None:
         bullet_list(
             [
                 "Retailrocket inspection script: src/ingestion/inspect_retailrocket_external.py",
-                "Retailrocket batch ingestion script planned: src/ingestion/ingest_retailrocket_batch.py",
-                "Retailrocket API ingestion script planned: src/ingestion/ingest_retailrocket_catalog_api.py",
-                "Raw storage layout: data/raw/source=retailrocket_batch/ and data/raw/source=retailrocket_api/",
+                "Retailrocket batch ingestion script: src/ingestion/ingest_retailrocket_batch.py",
+                "Retailrocket API ingestion script: src/ingestion/ingest_retailrocket_catalog_api.py",
+                "Mock API server: src/ingestion/mock_retailrocket_catalog_api.py",
+                "Raw layout: data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/",
+                "Raw batch source: data/raw/source=retailrocket_batch/",
+                "Raw API source: data/raw/source=retailrocket_api/",
                 "External storage layout: data/external/retailrocket",
             ],
             styles,
@@ -360,6 +381,13 @@ def build_pdf() -> None:
     )
 
     section_title("5. Data Validation and Quality Reports", story, styles)
+    subsection_title("5.1 Raw Validation", story, styles)
+    if not raw_validation.empty and "status" in raw_validation.columns:
+        story.append(df_to_table(raw_validation.groupby("status").size().reset_index(name="check_count"), styles))
+    else:
+        story.append(paragraph("Raw validation summary not available.", styles))
+
+    subsection_title("5.2 Staged and Curated Validation", story, styles)
     if not retail_validation.empty and "status" in retail_validation.columns:
         story.append(df_to_table(retail_validation.groupby("status").size().reset_index(name="check_count"), styles))
     else:
@@ -368,19 +396,36 @@ def build_pdf() -> None:
     story.append(
         paragraph(
             "Validation checks include missing values, duplicate IDs, schema mismatch, valid event types, "
-            "transaction ID consistency, latest item metadata uniqueness, and metadata coverage.",
+            "transaction ID consistency, latest item metadata uniqueness, and metadata coverage. The current "
+            "reports contain no failing validation checks.",
             styles,
         )
     )
+    warning_df = validation_warning_details(retail_validation)
+    if warning_df.empty:
+        story.append(paragraph("No warning-level staged validation checks are present in the current report.", styles))
+    else:
+        story.append(
+            paragraph(
+                "Warning-level checks are documented and do not block the pipeline. Current warnings are related "
+                "to duplicate event groups and item metadata coverage for category and availability fields.",
+                styles,
+            )
+        )
+        story.append(df_to_table(warning_df, styles, max_rows=6, max_cols=4))
 
     section_title("6. Data Preparation and EDA Plots", story, styles)
     story.append(
         paragraph(
-            "Raw CSV/API data is converted into clean Parquet datasets. EDA artifacts summarize event distribution, "
-            "item popularity, user activity distribution, and model metrics.",
+            "Raw CSV/API data is converted into clean staged Parquet datasets and curated analytical datasets. "
+            "EDA artifacts summarize event distribution, item popularity, user activity distribution, and model metrics.",
             styles,
         )
     )
+    subsection_title("6.1 Staged Preparation Summary", story, styles)
+    story.append(df_to_table(preparation, styles, max_rows=8, max_cols=7))
+    subsection_title("6.2 Curated Dataset Summary", story, styles)
+    story.append(df_to_table(curated, styles, max_rows=5, max_cols=7))
     story.append(KeepTogether(image_block(PLOTS_DIR / "retailrocket_event_distribution.png", "Retailrocket event distribution.", styles)))
     story.append(KeepTogether(image_block(PLOTS_DIR / "retailrocket_top_items.png", "Top Retailrocket items by popularity score.", styles)))
     story.append(KeepTogether(image_block(PLOTS_DIR / "retailrocket_user_activity_distribution.png", "Retailrocket user activity distribution.", styles)))
@@ -538,15 +583,15 @@ def build_pdf() -> None:
         )
     )
 
-    section_title("16. Limitations and Future Work", story, styles)
+    section_title("16. Operational Notes", story, styles)
     story.append(
         bullet_list(
             [
-                "Current Retailrocket models are lightweight baselines; future work can add deeper personalized collaborative filtering.",
-                "Future work can add item-item collaborative filtering or matrix factorization.",
-                "Candidate generation can be improved using category and availability filtering.",
-                "A FastAPI serving endpoint and Streamlit monitoring dashboard can be added.",
-                "A scheduled Prefect deployment can automate periodic refreshes.",
+                "Current Retailrocket models are lightweight and suitable for the assignment scope.",
+                "The content-based model is the main assignment model; popularity is retained as a benchmark.",
+                "The API ingestion flow supports local mock mode and environment-based real API configuration.",
+                "Generated heavy data and model files are DVC-tracked rather than committed directly to Git.",
+                "The Prefect API ingestion deployment command documents the 30-minute periodic metadata refresh.",
             ],
             styles,
         )

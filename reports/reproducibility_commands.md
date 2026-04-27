@@ -1,33 +1,37 @@
 # Reproducibility Commands
 
-## Activate environment
+## Activate Environment
 
 ```bash
 conda activate recomart
 ```
 
-## Check repository and DVC state
+## Check Repository and DVC State
 
 ```bash
 git status
 dvc status
 ```
 
-## Restore DVC-tracked data and models if needed
+## Restore DVC-Tracked Data and Models
 
 ```bash
 dvc pull
 ```
 
-## Run full Retailrocket Prefect pipeline
+## Run Full Retailrocket Prefect Pipeline
 
 ```bash
 python -m orchestration.retailrocket_pipeline
 ```
 
-## Schedule Retailrocket API ingestion every 30 minutes
+## Run API Ingestion Only
 
-Prefect 3 local deployment command:
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+## Schedule API Ingestion Every 30 Minutes
 
 ```bash
 prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \
@@ -36,35 +40,43 @@ prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api
   --pool default-agent-pool
 ```
 
-The API ingestion flow defaults to mock mode unless `RECOMART_CATALOG_API_MOCK_MODE` is already set.
-
-## Run Retailrocket training only
+## Run Retailrocket Training Only
 
 ```bash
 python -m src.training.train_retailrocket_popularity_recommender
 python -m src.training.train_retailrocket_content_recommender
 ```
 
-## Run Retailrocket inference
+## Run Retailrocket Inference
 
 ```bash
 python -m src.serving.recommend_retailrocket --model popularity --top-k 5
 python -m src.serving.recommend_retailrocket --model content_based --top-k 5
-python -m src.serving.recommend_retailrocket --model popularity --user-id 1327109 --top-k 10
-python -m src.serving.recommend_retailrocket --model content_based --demo-users 1327109,925350,839657 --top-k 5
 ```
 
-## Check DuckDB warehouse
+## Open MLflow UI
 
 ```bash
-duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
+mlflow ui --backend-store-uri sqlite:///$(pwd)/mlflow.db --default-artifact-root $(pwd)/mlruns --port 5001
 ```
 
-## Regenerate reports
+If local runs are stored in the default file backend, use:
+
+```bash
+mlflow ui --backend-store-uri file:$(pwd)/mlruns --port 5001
+```
+
+## Regenerate Evidence and Reports
 
 ```bash
 python -m src.reporting.generate_assignment_evidence
 python -m src.reporting.generate_model_comparison
 python -m src.reporting.generate_final_report
 python -m src.reporting.generate_assignment_pdf
+```
+
+## Check DuckDB Warehouse
+
+```bash
+duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
 ```

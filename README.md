@@ -1,39 +1,105 @@
-# RecoMart Recommendation Data Pipeline
+# RecoMart Retailrocket Recommendation Pipeline
 
-RecoMart is a reproducible data management pipeline for recommendation modeling on the Retailrocket dataset. The project ingests Retailrocket batch CSV data and supports a Retailrocket catalog metadata delta REST API source.
+RecoMart is a Retailrocket-only recommendation data management pipeline for Assignment I: End-to-End Data Management Pipeline for a Recommendation System. It ingests Retailrocket batch CSV files and Retailrocket item catalog metadata deltas from a REST/mock API, validates and prepares the data, builds a DuckDB warehouse and feature store, trains recommendation models, tracks experiments with MLflow, orchestrates the workflow with Prefect, and generates assignment evidence and a consolidated PDF report.
 
-## Project Scope
+## Table of Contents
 
-RecoMart uses Retailrocket data to build a local ML data pipeline:
+- [Business Problem](#business-problem)
+- [Dataset Used](#dataset-used)
+- [Final Architecture](#final-architecture)
+- [Folder Structure](#folder-structure)
+- [Tools Used](#tools-used)
+- [Environment Setup](#environment-setup)
+- [DVC Artifacts](#dvc-artifacts)
+- [Run the Pipeline](#run-the-pipeline)
+- [API Ingestion](#api-ingestion)
+- [Training and Inference](#training-and-inference)
+- [MLflow Tracking](#mlflow-tracking)
+- [Reports and Evidence](#reports-and-evidence)
+- [Submission Artifacts](#submission-artifacts)
 
-- Batch source archive: `data/external/retailrocket/events.csv`
-- Batch source archive: `data/external/retailrocket/item_properties_part1.csv`
-- Batch source archive: `data/external/retailrocket/item_properties_part2.csv`
-- Batch source archive: `data/external/retailrocket/category_tree.csv`
-- Staged Parquet data under `data/staged/source=retailrocket/`
-- DuckDB warehouse at `data/warehouse/recomart.duckdb`
-- Feature tables under `data/features/source=retailrocket/`
-- Retailrocket model artifacts under `models/retailrocket/`
-- Reports, plots, and assignment evidence under `reports/`
+## Business Problem
 
-## Current Repository Structure
+RecoMart needs a reproducible data pipeline that turns e-commerce user behavior and item metadata into recommendation features and model outputs. The pipeline supports product recommendation use cases such as ranking candidate items for active users, evaluating recommendation quality, and preserving data/model lineage for reproducibility.
+
+## Dataset Used
+
+The project uses Retailrocket data only:
+
+- Batch interaction source: `data/external/retailrocket/events.csv`
+- Batch item property source: `data/external/retailrocket/item_properties_part1.csv`
+- REST/mock API source archive: `data/external/retailrocket/item_properties_part2.csv`
+- Batch category hierarchy source: `data/external/retailrocket/category_tree.csv`
+
+The REST/mock API simulates an external near-real-time item catalog metadata delta feed. It fetches 10 item property records per run by default and persists cursor state between runs.
+
+## Final Architecture
 
 ```text
-configs/          Feature registry configuration
-data/external/    DVC-tracked Retailrocket source archive
-data/raw/         Raw Retailrocket ingestion snapshots
-data/staged/      Cleaned Retailrocket Parquet datasets tracked by DVC
-data/curated/     Curated analytical layer; populated in Phase 3
-data/features/    Retailrocket ML feature datasets tracked by DVC
-data/warehouse/   Generated DuckDB warehouse, ignored by Git
-models/           Retailrocket model artifacts tracked by DVC
-orchestration/    Prefect flows
-reports/          CSV summaries, plots, markdown report, PDF report
-sql/              Retailrocket DuckDB SQL scripts
-src/              Python pipeline modules
+data/external/retailrocket/
+  -> batch ingestion + REST/mock API ingestion
+data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+  -> raw validation
+data/staged/source=retailrocket/
+  -> staged and curated validation
+data/curated/source=retailrocket/
+  -> DuckDB warehouse
+data/warehouse/recomart.duckdb
+  -> feature tables and feature registry
+data/features/source=retailrocket/
+  -> model training + MLflow tracking
+models/retailrocket/
+  -> inference, reports, PDF, and Prefect evidence
 ```
 
-## Environment
+Raw ingestion uses this partition convention:
+
+```text
+data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+Implemented raw paths:
+
+```text
+data/raw/source=retailrocket_batch/type=events/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_batch/type=item_properties_part1/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_batch/type=category_tree/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+## Folder Structure
+
+```text
+configs/          Retailrocket feature registry configuration
+data/external/    DVC-tracked Retailrocket source archive
+data/raw/         DVC-tracked immutable raw ingestion snapshots
+data/staged/      DVC-tracked typed Retailrocket Parquet datasets
+data/curated/     DVC-tracked EDA/modeling-ready analytical datasets
+data/features/    DVC-tracked Retailrocket user, item, and user-item feature tables
+data/warehouse/   Generated DuckDB warehouse, ignored by Git
+logs/             Ingestion and pipeline logs
+models/           DVC-tracked Retailrocket model artifacts
+orchestration/    Prefect full pipeline and API ingestion flows
+reports/          CSV evidence, plots, screenshots, markdown report, and PDF report
+sql/              Retailrocket DuckDB SQL scripts
+src/              Python modules for ingestion, validation, preparation, transformation, training, serving, and reporting
+```
+
+## Tools Used
+
+| Tool | Purpose |
+|---|---|
+| Python | Pipeline implementation and command entry points |
+| pandas | CSV/Parquet processing, validation summaries, report tables |
+| DuckDB | Local SQL warehouse and transformation layer |
+| Parquet | Efficient staged, curated, and feature storage |
+| DVC | Versioning large data and model artifacts without committing payloads to Git |
+| MLflow | Tracking model parameters, metrics, run IDs, and artifacts |
+| Prefect | Local orchestration for the full Retailrocket pipeline and scheduled API ingestion |
+| ReportLab | PDF report generation |
+| FastAPI/mock API | Demo-compatible REST API source for item property deltas |
+
+## Environment Setup
 
 Use the existing conda environment:
 
@@ -41,47 +107,58 @@ Use the existing conda environment:
 conda activate recomart
 ```
 
-If running commands without activating the environment, use:
+Or run commands without activating the shell:
 
 ```bash
 conda run -n recomart <command>
 ```
 
-## Retailrocket Raw Ingestion
+## DVC Artifacts
 
-Raw data uses this partition convention everywhere:
-
-```text
-data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
-```
-
-Run Retailrocket batch ingestion from the external source archive:
+Restore DVC-tracked artifacts if a DVC remote is configured:
 
 ```bash
-python -m src.ingestion.ingest_retailrocket_batch
+dvc pull
 ```
 
-Batch ingestion lands:
+Check versioning state:
 
-```text
-data/raw/source=retailrocket_batch/type=events/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
-data/raw/source=retailrocket_batch/type=item_properties_part1/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
-data/raw/source=retailrocket_batch/type=category_tree/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```bash
+git status
+dvc status
 ```
 
-Run Retailrocket catalog API ingestion in mock/local mode:
+DVC metadata tracks large generated artifacts:
+
+- `data/external/retailrocket.dvc`
+- `data/raw/source=retailrocket_batch.dvc`
+- `data/raw/source=retailrocket_api.dvc`
+- `data/staged/source=retailrocket.dvc`
+- `data/curated/source=retailrocket.dvc`
+- `data/features/source=retailrocket.dvc`
+- `models/retailrocket.dvc`
+
+Generated heavy data/model payloads are DVC-tracked and are not committed directly to Git.
+
+## Run the Pipeline
+
+Run the full Retailrocket Prefect pipeline:
+
+```bash
+python -m orchestration.retailrocket_pipeline
+```
+
+The flow runs batch ingestion, API/mock delta ingestion, raw validation, staged/curated preparation, staged/curated validation, DuckDB loading, feature building, feature retrieval, model training, inference, model comparison, evidence generation, final markdown report generation, and PDF generation.
+
+## API Ingestion
+
+Run one Retailrocket API/mock ingestion step:
 
 ```bash
 RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
-API ingestion lands:
-
-```text
-data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
-```
-
-Catalog API environment variables:
+API configuration variables:
 
 ```text
 RECOMART_CATALOG_API_BASE_URL
@@ -93,76 +170,19 @@ RECOMART_CATALOG_API_STATE_FILE
 RECOMART_CATALOG_API_MOCK_MODE
 ```
 
-Default page size is 10 records per run. Cursor state is stored in `data/raw/source=retailrocket_api/_state/item_properties_delta_state.json` unless `RECOMART_CATALOG_API_STATE_FILE` is set.
-
-The mock/demo API serves records from `data/external/retailrocket/item_properties_part2.csv` with a compatible endpoint:
+Run the optional local mock API server:
 
 ```bash
 uvicorn src.ingestion.mock_retailrocket_catalog_api:app --host 127.0.0.1 --port 8000
 ```
 
-Then run the client against it:
+Run the ingestion client against the mock server:
 
 ```bash
 RECOMART_CATALOG_API_BASE_URL=http://127.0.0.1:8000 python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
-## Retailrocket Commands
-
-Inspect external Retailrocket files:
-
-```bash
-python -m src.ingestion.inspect_retailrocket_external
-```
-
-Prepare current staged Retailrocket datasets:
-
-```bash
-python -m src.preparation.prepare_retailrocket
-```
-
-Validate staged Retailrocket datasets:
-
-```bash
-python -m src.validation.validate_retailrocket_raw
-python -m src.validation.validate_retailrocket_staged
-```
-
-Load the DuckDB warehouse:
-
-```bash
-python -m src.transformation.load_retailrocket_to_duckdb
-```
-
-Build Retailrocket feature tables:
-
-```bash
-python -m src.transformation.build_retailrocket_features
-```
-
-Train Retailrocket models:
-
-```bash
-python -m src.training.train_retailrocket_popularity_recommender
-python -m src.training.train_retailrocket_content_recommender
-```
-
-Run Retailrocket inference:
-
-```bash
-python -m src.serving.recommend_retailrocket --model popularity --top-k 5
-python -m src.serving.recommend_retailrocket --model content_based --top-k 5
-python -m src.serving.recommend_retailrocket --model popularity --user-id 1327109 --top-k 10
-python -m src.serving.recommend_retailrocket --model content_based --demo-users 1327109,925350,839657 --top-k 5
-```
-
-Run the full Retailrocket Prefect flow:
-
-```bash
-python -m orchestration.retailrocket_pipeline
-```
-
-Schedule only the Retailrocket catalog API ingestion every 30 minutes with Prefect 3:
+Schedule API ingestion every 30 minutes with Prefect 3:
 
 ```bash
 prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \
@@ -171,9 +191,56 @@ prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api
   --pool default-agent-pool
 ```
 
-For local execution without a real API server, the API ingestion flow defaults `RECOMART_CATALOG_API_MOCK_MODE=true` unless that environment variable is already set.
+The API ingestion flow defaults to mock mode unless `RECOMART_CATALOG_API_MOCK_MODE` is already set.
 
-Regenerate assignment evidence:
+## Training and Inference
+
+Train the Retailrocket models:
+
+```bash
+python -m src.training.train_retailrocket_popularity_recommender
+python -m src.training.train_retailrocket_content_recommender
+```
+
+Run inference for both models:
+
+```bash
+python -m src.serving.recommend_retailrocket --model popularity --top-k 5
+python -m src.serving.recommend_retailrocket --model content_based --top-k 5
+```
+
+Run inference for selected users:
+
+```bash
+python -m src.serving.recommend_retailrocket --model popularity --user-id 1327109 --top-k 10
+python -m src.serving.recommend_retailrocket --model content_based --demo-users 1327109,925350,839657 --top-k 5
+```
+
+## MLflow Tracking
+
+The models log to the MLflow experiment:
+
+```text
+retailrocket_recommendation_models
+```
+
+Open the MLflow UI with the local tracking backend:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///$(pwd)/mlflow.db --default-artifact-root $(pwd)/mlruns --port 5001
+```
+
+If runs were created with the default local file store instead of SQLite, open:
+
+```bash
+mlflow ui --backend-store-uri file:$(pwd)/mlruns --port 5001
+```
+
+MLflow screenshot evidence is stored in `reports/screenshots/`.
+
+## Reports and Evidence
+
+Regenerate evidence, markdown report, and PDF:
 
 ```bash
 python -m src.reporting.generate_assignment_evidence
@@ -182,50 +249,28 @@ python -m src.reporting.generate_final_report
 python -m src.reporting.generate_assignment_pdf
 ```
 
-## DVC
+Important evidence files:
 
-DVC tracks large Retailrocket data and model artifacts while Git stores source code, reports, and DVC metadata.
+- `reports/recomart_assignment_report.pdf`
+- `reports/final_project_report.md`
+- `reports/reproducibility_commands.md`
+- `reports/orchestration_retailrocket_pipeline_summary.csv`
+- `reports/feature_metadata_documentation.csv`
+- `reports/feature_store_retrieval_demo.csv`
+- `reports/retailrocket_model_comparison.csv`
+- `reports/submission_checklist.md`
+- `reports/video_walkthrough_script.md`
 
-```bash
-git status
-dvc status
-dvc pull
-```
+## Submission Artifacts
 
-Tracked Retailrocket metadata currently includes:
+Expected submission materials:
 
-- `data/external/retailrocket.dvc`
-- `data/raw/source=retailrocket_batch.dvc`
-- `data/raw/source=retailrocket_api.dvc`
-- `data/staged/source=retailrocket.dvc`
-- `data/curated/source=retailrocket.dvc`
-- `data/features/source=retailrocket.dvc`
-- `models/retailrocket.dvc`
+- Source code in this repository
+- Consolidated PDF report: `reports/recomart_assignment_report.pdf`
+- Reproducibility commands: `reports/reproducibility_commands.md`
+- Video walkthrough script: `reports/video_walkthrough_script.md`
+- DVC metadata for large data/model artifacts
+- MLflow screenshot evidence under `reports/screenshots/`
+- Prefect orchestration evidence under `reports/orchestration_retailrocket_pipeline_summary.csv`
 
-## Current Refactor Status
-
-This branch is moving the project to the final assignment story:
-
-> RecoMart ingests Retailrocket interaction data from batch CSV files and item catalog metadata deltas from a REST API. It validates, stages, transforms, curates, versions, and uses this data to build Retailrocket recommendation features, a Retailrocket feature store, model training/evaluation, MLflow tracking, inference, and Prefect orchestration.
-
-The following layers are completed or already present:
-
-- Retailrocket external source archive
-- Retailrocket batch raw ingestion
-- Retailrocket REST/mock API raw ingestion
-- Retailrocket raw validation
-- Retailrocket staged data
-- Retailrocket curated analytical datasets
-- Retailrocket DuckDB warehouse
-- Retailrocket feature tables
-- Retailrocket popularity recommender
-- Retailrocket content-based recommender
-- Retailrocket inference script
-- Retailrocket feature registry and retrieval demo
-- Retailrocket-only Prefect orchestration flow
-- Retailrocket 30-minute API ingestion flow documentation
-
-The following layers are planned for the next phases:
-
-- Retailrocket-only final report and PDF regeneration
-- Clean rebuild workflow
+Final ZIP packaging is pending explicit approval.

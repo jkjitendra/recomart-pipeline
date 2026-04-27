@@ -407,7 +407,7 @@ def generate_dvc_versioning_summary() -> None:
         },
         {
             "pipeline_layer": "model_artifact",
-            "description": "Retailrocket trained popularity model",
+            "description": "Retailrocket trained recommendation model artifacts",
             "file": Path("models/retailrocket.dvc"),
         },
     ]
@@ -524,7 +524,7 @@ def generate_repository_structure_summary() -> None:
             "path": "orchestration/",
             "purpose": "Prefect pipeline definitions",
             "versioning": "Git",
-            "example_files": "retailrocket_pipeline.py",
+            "example_files": "retailrocket_pipeline.py, retailrocket_api_ingestion_flow.py",
         },
     ]
 
