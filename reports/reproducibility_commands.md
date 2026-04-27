@@ -19,11 +19,24 @@ dvc status
 dvc pull
 ```
 
-## Run current Retailrocket pipeline
+## Run full Retailrocket Prefect pipeline
 
 ```bash
 python -m orchestration.retailrocket_pipeline
 ```
+
+## Schedule Retailrocket API ingestion every 30 minutes
+
+Prefect 3 local deployment command:
+
+```bash
+prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \
+  --name retailrocket-api-every-30-minutes \
+  --interval 1800 \
+  --pool default-agent-pool
+```
+
+The API ingestion flow defaults to mock mode unless `RECOMART_CATALOG_API_MOCK_MODE` is already set.
 
 ## Run Retailrocket training only
 
@@ -35,9 +48,10 @@ python -m src.training.train_retailrocket_content_recommender
 ## Run Retailrocket inference
 
 ```bash
-python -m src.serving.recommend_retailrocket
-python -m src.serving.recommend_retailrocket --user-id 1327109 --top-k 10
-python -m src.serving.recommend_retailrocket --demo-users 1327109,925350,839657 --top-k 5
+python -m src.serving.recommend_retailrocket --model popularity --top-k 5
+python -m src.serving.recommend_retailrocket --model content_based --top-k 5
+python -m src.serving.recommend_retailrocket --model popularity --user-id 1327109 --top-k 10
+python -m src.serving.recommend_retailrocket --model content_based --demo-users 1327109,925350,839657 --top-k 5
 ```
 
 ## Check DuckDB warehouse

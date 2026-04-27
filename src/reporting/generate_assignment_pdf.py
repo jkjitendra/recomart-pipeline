@@ -515,12 +515,13 @@ def build_pdf() -> None:
     section_title("14. Pipeline Orchestration", story, styles)
     story.append(
         paragraph(
-            "Prefect orchestrates the pipeline. The Retailrocket flow runs inspection, preparation, validation, "
-            "DuckDB loading, feature engineering, model training, and inference.",
+            "Prefect orchestrates the Retailrocket-only pipeline. The flow runs batch ingestion, REST or mock API "
+            "delta ingestion, raw validation, staged and curated preparation, warehouse loading, feature building, "
+            "feature retrieval, model training, inference, comparison, and report generation.",
             styles,
         )
     )
-    story.append(df_to_table(retail_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=12, max_cols=4))
+    story.append(df_to_table(retail_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=20, max_cols=4))
 
     section_title("15. Reproducibility Workflow", story, styles)
     story.append(
@@ -530,6 +531,7 @@ def build_pdf() -> None:
                 "Check version state: git status and dvc status",
                 "Restore tracked artifacts if remote is configured: dvc pull",
                 "Run Retailrocket flow: python -m orchestration.retailrocket_pipeline",
+                "Schedule REST ingestion every 30 minutes: prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow --name retailrocket-api-every-30-minutes --interval 1800 --pool default-agent-pool",
                 "Open MLflow UI using the tracking URI from Python: mlflow ui --backend-store-uri \"$TRACKING_URI\" --port 5001",
             ],
             styles,

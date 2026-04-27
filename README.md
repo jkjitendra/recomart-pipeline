@@ -124,6 +124,7 @@ python -m src.preparation.prepare_retailrocket
 Validate staged Retailrocket datasets:
 
 ```bash
+python -m src.validation.validate_retailrocket_raw
 python -m src.validation.validate_retailrocket_staged
 ```
 
@@ -149,16 +150,28 @@ python -m src.training.train_retailrocket_content_recommender
 Run Retailrocket inference:
 
 ```bash
-python -m src.serving.recommend_retailrocket
-python -m src.serving.recommend_retailrocket --user-id 1327109 --top-k 10
-python -m src.serving.recommend_retailrocket --demo-users 1327109,925350,839657 --top-k 5
+python -m src.serving.recommend_retailrocket --model popularity --top-k 5
+python -m src.serving.recommend_retailrocket --model content_based --top-k 5
+python -m src.serving.recommend_retailrocket --model popularity --user-id 1327109 --top-k 10
+python -m src.serving.recommend_retailrocket --model content_based --demo-users 1327109,925350,839657 --top-k 5
 ```
 
-Run the current Retailrocket Prefect flow:
+Run the full Retailrocket Prefect flow:
 
 ```bash
 python -m orchestration.retailrocket_pipeline
 ```
+
+Schedule only the Retailrocket catalog API ingestion every 30 minutes with Prefect 3:
+
+```bash
+prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \
+  --name retailrocket-api-every-30-minutes \
+  --interval 1800 \
+  --pool default-agent-pool
+```
+
+For local execution without a real API server, the API ingestion flow defaults `RECOMART_CATALOG_API_MOCK_MODE=true` unless that environment variable is already set.
 
 Regenerate assignment evidence:
 
@@ -182,7 +195,10 @@ dvc pull
 Tracked Retailrocket metadata currently includes:
 
 - `data/external/retailrocket.dvc`
+- `data/raw/source=retailrocket_batch.dvc`
+- `data/raw/source=retailrocket_api.dvc`
 - `data/staged/source=retailrocket.dvc`
+- `data/curated/source=retailrocket.dvc`
 - `data/features/source=retailrocket.dvc`
 - `models/retailrocket.dvc`
 
@@ -205,10 +221,11 @@ The following layers are completed or already present:
 - Retailrocket popularity recommender
 - Retailrocket content-based recommender
 - Retailrocket inference script
-- Retailrocket Prefect flow baseline
+- Retailrocket feature registry and retrieval demo
+- Retailrocket-only Prefect orchestration flow
+- Retailrocket 30-minute API ingestion flow documentation
 
 The following layers are planned for the next phases:
 
-- Retailrocket feature registry and retrieval demo
 - Retailrocket-only final report and PDF regeneration
 - Clean rebuild workflow

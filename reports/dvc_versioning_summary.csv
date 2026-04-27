@@ -1,0 +1,8 @@
+pipeline_layer,description,dvc_file,tracked_path,md5,size_bytes,nfiles,versioning_tool,tracked_in_git
+external_data,Retailrocket original external CSV dataset,data/external/retailrocket.dvc,retailrocket,19cdee87944c59fc15c51396fe37cd88.dir,987498023,4,DVC,True
+raw_batch_data,Retailrocket raw batch ingestion snapshots,data/raw/source=retailrocket_batch.dvc,source=retailrocket_batch,6b7902fb4530b1734d36e3437598fb8b.dir,1157139676,12,DVC,True
+raw_api_data,Retailrocket raw REST API catalog delta snapshots,data/raw/source=retailrocket_api.dvc,source=retailrocket_api,81d03ebd3c88afd093050a4fd4dc559d.dir,30380,16,DVC,True
+staged_data,Retailrocket staged Parquet data,data/staged/source=retailrocket.dvc,source=retailrocket,00c5f1f43070aec1c8db3874840e4dd3.dir,79159207,7,DVC,True
+curated_data,Retailrocket curated analytical Parquet data,data/curated/source=retailrocket.dvc,source=retailrocket,7ee4dd6b691c6d0227be30f2a6376577.dir,157345269,3,DVC,True
+feature_data,Retailrocket feature Parquet data,data/features/source=retailrocket.dvc,source=retailrocket,6a68269593b2932489a11ad010ecb0c8.dir,144567635,3,DVC,True
+model_artifact,Retailrocket trained popularity model,models/retailrocket.dvc,retailrocket,16a89f890589ee5fdb99b1302d1766ba.dir,1226758,2,DVC,True

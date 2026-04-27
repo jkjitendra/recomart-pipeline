@@ -136,8 +136,9 @@ def generate_report() -> str:
 
     lines.append("\n# 9. Feature Registry")
     lines.append(
-        "A Retailrocket feature registry and retrieval demo are part of the planned feature-store refactor. "
-        "The current feature tables are already generated under `data/features/source=retailrocket/`."
+        "A Retailrocket feature registry documents user, item, and user-item feature views. "
+        "The retrieval demo reads current feature Parquet files under `data/features/source=retailrocket/` "
+        "and writes sample retrieval evidence."
     )
 
     lines.append("\n# 10. Model Training")
@@ -208,17 +209,17 @@ def generate_report() -> str:
 
     lines.append("\n# 17. Limitations and Future Work")
     lines.append(
-        "- Add Retailrocket raw batch ingestion and REST catalog-delta ingestion\n"
-        "- Add curated analytical datasets\n"
-        "- Add a Retailrocket feature registry and retrieval demo\n"
-        "- Add scheduled REST ingestion with Prefect deployment documentation\n"
-        "- Regenerate the final assignment PDF after the refactor is complete"
+        "- The current models are lightweight recommenders suitable for the assignment scope\n"
+        "- Future work can add collaborative filtering or sequence-aware recommendation models\n"
+        "- A production deployment would use a managed API endpoint and persistent Prefect work pool\n"
+        "- Phase 7 refreshes final narrative wording and PDF presentation for submission polish"
     )
 
     lines.append("\n# 18. Conclusion")
     lines.append(
-        "The current Retailrocket pipeline demonstrates a reproducible ML data management workflow and is being "
-        "refactored into the final Retailrocket batch plus REST API assignment architecture."
+        "The Retailrocket pipeline demonstrates a reproducible ML data management workflow with batch ingestion, "
+        "REST catalog-delta ingestion, validation, preparation, warehousing, feature engineering, model training, "
+        "MLflow tracking, inference, DVC versioning, and Prefect orchestration."
     )
 
     return "\n".join(lines)
@@ -251,11 +252,25 @@ def generate_commands_doc() -> str:
     lines.append("```")
 
     lines.append("")
-    lines.append("## Run current Retailrocket pipeline")
+    lines.append("## Run full Retailrocket Prefect pipeline")
     lines.append("")
     lines.append("```bash")
     lines.append("python -m orchestration.retailrocket_pipeline")
     lines.append("```")
+
+    lines.append("")
+    lines.append("## Schedule Retailrocket API ingestion every 30 minutes")
+    lines.append("")
+    lines.append("Prefect 3 local deployment command:")
+    lines.append("")
+    lines.append("```bash")
+    lines.append("prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \\")
+    lines.append("  --name retailrocket-api-every-30-minutes \\")
+    lines.append("  --interval 1800 \\")
+    lines.append("  --pool default-agent-pool")
+    lines.append("```")
+    lines.append("")
+    lines.append("The API ingestion flow defaults to mock mode unless `RECOMART_CATALOG_API_MOCK_MODE` is already set.")
 
     lines.append("")
     lines.append("## Run Retailrocket training only")
@@ -269,9 +284,10 @@ def generate_commands_doc() -> str:
     lines.append("## Run Retailrocket inference")
     lines.append("")
     lines.append("```bash")
-    lines.append("python -m src.serving.recommend_retailrocket")
-    lines.append("python -m src.serving.recommend_retailrocket --user-id 1327109 --top-k 10")
-    lines.append("python -m src.serving.recommend_retailrocket --demo-users 1327109,925350,839657 --top-k 5")
+    lines.append("python -m src.serving.recommend_retailrocket --model popularity --top-k 5")
+    lines.append("python -m src.serving.recommend_retailrocket --model content_based --top-k 5")
+    lines.append("python -m src.serving.recommend_retailrocket --model popularity --user-id 1327109 --top-k 10")
+    lines.append("python -m src.serving.recommend_retailrocket --model content_based --demo-users 1327109,925350,839657 --top-k 5")
     lines.append("```")
 
     lines.append("")
