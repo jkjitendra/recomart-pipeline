@@ -35,7 +35,7 @@ PIPELINE_STEPS: list[dict[str, Any]] = [
         "step_order": 3,
         "step_name": "ingest_retailrocket_catalog_api_delta",
         "module": "src.ingestion.ingest_retailrocket_catalog_api",
-        "description": "Land Retailrocket catalog metadata deltas from the REST API or mock API.",
+        "description": "Land Retailrocket catalog metadata deltas from the teammate REST API or reproducible mock API.",
         "env_defaults": {
             "RECOMART_CATALOG_API_MOCK_MODE": "true",
         },

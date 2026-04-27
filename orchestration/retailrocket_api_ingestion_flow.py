@@ -91,6 +91,11 @@ def retailrocket_api_ingestion_flow() -> None:
     """
     Runs one Retailrocket catalog metadata delta ingestion.
 
+    Mock mode is the default for reproducible local runs. To use the teammate-hosted API,
+    set RECOMART_CATALOG_API_MOCK_MODE=false, RECOMART_CATALOG_API_BASE_URL,
+    RECOMART_CATALOG_API_ENDPOINT, and RECOMART_CATALOG_API_PAGE_SIZE. The ingestion
+    client sends RECOMART_CATALOG_API_PAGE_SIZE as the count query parameter.
+
     Prefect 3 local deployment example:
 
     prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \

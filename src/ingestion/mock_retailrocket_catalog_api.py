@@ -15,7 +15,9 @@ app = FastAPI(
     description=(
         "Mock/demo API that serves Retailrocket item property records from "
         "data/external/retailrocket/item_properties_part2.csv. It implements "
-        "GET /api/item-properties?limit=10&cursor=<cursor> for local ingestion tests."
+        "GET /api/item-properties?limit=10&cursor=<cursor> for local ingestion tests. "
+        "The count query parameter is accepted as an alias for limit so client examples "
+        "match the teammate-hosted API contract."
     ),
     version="1.0.0",
 )
@@ -72,9 +74,11 @@ def read_page(limit: int, cursor: str | None) -> dict[str, Any]:
 @app.get("/api/item-properties")
 def get_item_properties(
     limit: int = Query(default=10, ge=1, le=1000),
+    count: int | None = Query(default=None, ge=1, le=1000),
     cursor: str | None = Query(default=None),
 ) -> dict[str, Any]:
-    return read_page(limit=limit, cursor=cursor)
+    effective_limit = count if count is not None else limit
+    return read_page(limit=effective_limit, cursor=cursor)
 
 
 if __name__ == "__main__":

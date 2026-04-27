@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import logging
 import os
@@ -90,7 +91,7 @@ def load_config() -> ApiConfig:
         page_size=page_size,
         auth_token=os.getenv("RECOMART_CATALOG_API_AUTH_TOKEN") or None,
         state_file=env_path("RECOMART_CATALOG_API_STATE_FILE", DEFAULT_STATE_PATH),
-        mock_mode=parse_bool(os.getenv("RECOMART_CATALOG_API_MOCK_MODE"), default=False),
+        mock_mode=parse_bool(os.getenv("RECOMART_CATALOG_API_MOCK_MODE"), default=True),
     )
 
 
@@ -108,6 +109,10 @@ def load_state(state_file: Path) -> dict[str, Any]:
             "cursor": None,
             "records_ingested_total": 0,
             "last_ingestion_timestamp": None,
+            "last_api_count": None,
+            "last_api_total_rows": None,
+            "last_api_unread_rows": None,
+            "last_api_success": None,
             "updated_at": None,
         }
 
@@ -122,6 +127,7 @@ def save_state(
     next_cursor: str | None,
     run_timestamp: str,
     records_ingested: int,
+    payload_metadata: dict[str, Any],
 ) -> None:
     state_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -129,6 +135,10 @@ def save_state(
         "cursor": next_cursor,
         "records_ingested_total": int(previous_state.get("records_ingested_total", 0)) + records_ingested,
         "last_ingestion_timestamp": run_timestamp,
+        "last_api_count": payload_metadata.get("api_count"),
+        "last_api_total_rows": payload_metadata.get("total_rows"),
+        "last_api_unread_rows": payload_metadata.get("unread_rows"),
+        "last_api_success": payload_metadata.get("success"),
         "updated_at": datetime.now().isoformat(timespec="seconds"),
     }
 
@@ -142,7 +152,6 @@ def normalize_endpoint(base_url: str, endpoint: str) -> str:
 def request_api_page(
     *,
     config: ApiConfig,
-    cursor: str | None,
     logger: logging.Logger,
 ) -> dict[str, Any]:
     url = normalize_endpoint(config.base_url, config.endpoint)
@@ -151,19 +160,15 @@ def request_api_page(
     if config.auth_token:
         headers["Authorization"] = f"Bearer {config.auth_token}"
 
-    params = {
-        "limit": config.page_size,
-        "cursor": cursor or "",
-    }
+    params = {"count": config.page_size}
 
     for attempt in range(1, config.retries + 1):
         try:
             logger.info(
-                "Fetching Retailrocket API page attempt=%s url=%s limit=%s cursor=%s timeout=%s",
+                "Fetching Retailrocket API page attempt=%s url=%s count=%s timeout=%s",
                 attempt,
                 url,
                 config.page_size,
-                cursor,
                 config.timeout_sec,
             )
 
@@ -247,18 +252,66 @@ def fetch_page(
         )
         return read_mock_page(config.page_size, cursor)
 
-    return request_api_page(config=config, cursor=cursor, logger=logger)
+    return request_api_page(config=config, logger=logger)
 
 
-def validate_response(payload: dict[str, Any]) -> None:
-    if "records" not in payload or not isinstance(payload["records"], list):
-        raise ValueError("API response must contain a list field named 'records'.")
+def detect_api_contract(payload: dict[str, Any]) -> str:
+    if "data" in payload:
+        return "teammate_data_contract"
+
+    if "records" in payload:
+        return "mock_records_contract"
+
+    raise ValueError("API response must contain either 'data' or 'records'.")
+
+
+def validate_response(payload: dict[str, Any]) -> dict[str, Any]:
+    api_contract = detect_api_contract(payload)
+
+    if api_contract == "teammate_data_contract":
+        if not isinstance(payload.get("data"), list):
+            raise ValueError("Teammate API response field 'data' must be a list.")
+
+        success = bool(payload.get("success", False))
+        if not success:
+            raise ValueError("Teammate API response reported success=false.")
+
+        api_count = payload.get("count")
+        if api_count is not None and int(api_count) != len(payload["data"]):
+            raise ValueError(
+                f"Teammate API count mismatch: count={api_count}, data_rows={len(payload['data'])}"
+            )
+
+        return {
+            "api_contract": api_contract,
+            "records": payload["data"],
+            "next_cursor": None,
+            "has_more": None,
+            "api_count": int(api_count) if api_count is not None else len(payload["data"]),
+            "total_rows": payload.get("total_rows"),
+            "unread_rows": payload.get("unread_rows"),
+            "success": success,
+        }
+
+    if not isinstance(payload.get("records"), list):
+        raise ValueError("Mock/internal API response field 'records' must be a list.")
 
     if "next_cursor" not in payload:
-        raise ValueError("API response must contain 'next_cursor'.")
+        raise ValueError("Mock/internal API response must contain 'next_cursor'.")
 
     if "has_more" not in payload:
-        raise ValueError("API response must contain 'has_more'.")
+        raise ValueError("Mock/internal API response must contain 'has_more'.")
+
+    return {
+        "api_contract": api_contract,
+        "records": payload["records"],
+        "next_cursor": payload.get("next_cursor"),
+        "has_more": payload.get("has_more"),
+        "api_count": len(payload["records"]),
+        "total_rows": payload.get("total_rows"),
+        "unread_rows": payload.get("unread_rows"),
+        "success": payload.get("success", True),
+    }
 
 
 def normalize_records(records: list[dict[str, Any]], run_timestamp: str) -> pd.DataFrame:
@@ -283,6 +336,14 @@ def normalize_records(records: list[dict[str, Any]], run_timestamp: str) -> pd.D
     return pd.DataFrame(rows)
 
 
+def file_sha256(path: Path, chunk_size: int = 1024 * 1024) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def write_landing_files(
     *,
     output_dir: Path,
@@ -291,6 +352,7 @@ def write_landing_files(
     run_timestamp: str,
     config: ApiConfig,
     state_before: dict[str, Any],
+    payload_metadata: dict[str, Any],
 ) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=False)
 
@@ -307,22 +369,30 @@ def write_landing_files(
     )
     normalized_df.to_csv(normalized_csv_path, index=False)
     normalized_df.to_parquet(normalized_parquet_path, index=False)
+    normalized_csv_checksum = file_sha256(normalized_csv_path)
 
     metadata = {
         "source_system": SOURCE_SYSTEM,
         "data_type": DATA_TYPE,
         "ingestion_timestamp": run_timestamp,
         "row_count": int(len(normalized_df)),
+        "request_count": config.page_size,
         "page_size": config.page_size,
         "mock_mode": config.mock_mode,
+        "api_contract": payload_metadata.get("api_contract"),
+        "total_rows": payload_metadata.get("total_rows"),
+        "unread_rows": payload_metadata.get("unread_rows"),
+        "api_count": payload_metadata.get("api_count"),
+        "api_success": payload_metadata.get("success"),
+        "checksum_sha256": normalized_csv_checksum,
         "base_url": config.base_url,
         "endpoint": config.endpoint,
         "state_file": str(config.state_file.relative_to(PROJECT_ROOT))
         if config.state_file.is_relative_to(PROJECT_ROOT)
         else str(config.state_file),
         "cursor_before": state_before.get("cursor"),
-        "next_cursor": payload.get("next_cursor"),
-        "has_more": bool(payload.get("has_more")),
+        "next_cursor": payload_metadata.get("next_cursor"),
+        "has_more": payload_metadata.get("has_more"),
         "raw_response_file": str(raw_response_path.relative_to(PROJECT_ROOT)),
         "normalized_json_file": str(normalized_json_path.relative_to(PROJECT_ROOT)),
         "normalized_csv_file": str(normalized_csv_path.relative_to(PROJECT_ROOT)),
@@ -353,6 +423,7 @@ def build_summary_row(
     config: ApiConfig,
     state_before: dict[str, Any],
     payload: dict[str, Any],
+    payload_metadata: dict[str, Any],
     normalized_df: pd.DataFrame,
     output_dir: Path,
     files: dict[str, Path],
@@ -371,11 +442,15 @@ def build_summary_row(
         "metadata_file": path_for_summary(files["metadata"]) if files else "",
         "state_file": path_for_summary(config.state_file),
         "mock_mode": config.mock_mode,
+        "api_contract": payload_metadata.get("api_contract") if payload_metadata else "",
         "page_size": config.page_size,
         "cursor_before": state_before.get("cursor"),
-        "next_cursor": payload.get("next_cursor") if payload else None,
-        "has_more": payload.get("has_more") if payload else None,
+        "next_cursor": payload_metadata.get("next_cursor") if payload_metadata else None,
+        "has_more": payload_metadata.get("has_more") if payload_metadata else None,
         "row_count": int(len(normalized_df)),
+        "total_rows": payload_metadata.get("total_rows") if payload_metadata else None,
+        "unread_rows": payload_metadata.get("unread_rows") if payload_metadata else None,
+        "api_success": payload_metadata.get("success") if payload_metadata else None,
         "status": status,
         "error": error,
     }
@@ -396,13 +471,14 @@ def main() -> None:
     )
 
     payload: dict[str, Any] = {}
+    payload_metadata: dict[str, Any] = {}
     normalized_df = pd.DataFrame()
     files: dict[str, Path] = {}
 
     try:
         payload = fetch_page(config=config, cursor=state_before.get("cursor"), logger=logger)
-        validate_response(payload)
-        normalized_df = normalize_records(payload["records"], run_timestamp)
+        payload_metadata = validate_response(payload)
+        normalized_df = normalize_records(payload_metadata["records"], run_timestamp)
         files = write_landing_files(
             output_dir=output_dir,
             payload=payload,
@@ -410,13 +486,17 @@ def main() -> None:
             run_timestamp=run_timestamp,
             config=config,
             state_before=state_before,
+            payload_metadata=payload_metadata,
         )
         save_state(
             state_file=config.state_file,
             previous_state=state_before,
-            next_cursor=str(payload.get("next_cursor")) if payload.get("next_cursor") is not None else None,
+            next_cursor=str(payload_metadata.get("next_cursor"))
+            if payload_metadata.get("next_cursor") is not None
+            else state_before.get("cursor"),
             run_timestamp=run_timestamp,
             records_ingested=len(normalized_df),
+            payload_metadata=payload_metadata,
         )
 
         summary_row = build_summary_row(
@@ -424,6 +504,7 @@ def main() -> None:
             config=config,
             state_before=state_before,
             payload=payload,
+            payload_metadata=payload_metadata,
             normalized_df=normalized_df,
             output_dir=output_dir,
             files=files,
@@ -432,8 +513,8 @@ def main() -> None:
         logger.info(
             "Retailrocket catalog API ingestion succeeded rows=%s next_cursor=%s has_more=%s landing_path=%s",
             len(normalized_df),
-            payload.get("next_cursor"),
-            payload.get("has_more"),
+            payload_metadata.get("next_cursor"),
+            payload_metadata.get("has_more"),
             output_dir,
         )
     except Exception as exc:
@@ -443,6 +524,7 @@ def main() -> None:
             config=config,
             state_before=state_before,
             payload=payload,
+            payload_metadata=payload_metadata,
             normalized_df=normalized_df,
             output_dir=output_dir,
             files=files,

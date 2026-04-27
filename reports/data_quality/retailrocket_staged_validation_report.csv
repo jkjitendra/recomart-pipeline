@@ -12,13 +12,13 @@ item_properties_batch,read_parquet,PASS,"1243692 rows, 8 columns"
 item_properties_batch,required_columns,PASS,All required columns found
 item_properties_batch,row_count_positive,PASS,Found 1243692 rows
 item_properties_api_delta,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_api_delta.parquet
-item_properties_api_delta,read_parquet,PASS,"40 rows, 9 columns"
+item_properties_api_delta,read_parquet,PASS,"100 rows, 9 columns"
 item_properties_api_delta,required_columns,PASS,All required columns found
-item_properties_api_delta,row_count_positive,PASS,Found 40 rows
+item_properties_api_delta,row_count_positive,PASS,Found 100 rows
 item_properties_combined,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_combined.parquet
-item_properties_combined,read_parquet,PASS,"1243732 rows, 9 columns"
+item_properties_combined,read_parquet,PASS,"1243792 rows, 9 columns"
 item_properties_combined,required_columns,PASS,All required columns found
-item_properties_combined,row_count_positive,PASS,Found 1243732 rows
+item_properties_combined,row_count_positive,PASS,Found 1243792 rows
 item_category_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_category_latest.parquet
 item_category_latest,read_parquet,PASS,"229342 rows, 6 columns"
 item_category_latest,required_columns,PASS,All required columns found
@@ -51,7 +51,7 @@ item_properties_api_delta,null_property_timestamp_ms,PASS,Null rows: 0
 item_properties_api_delta,null_item_id,PASS,Null rows: 0
 item_properties_api_delta,null_property_name,PASS,Null rows: 0
 item_properties_api_delta,null_property_value,PASS,Null rows: 0
-item_properties_combined,combined_row_count,PASS,"batch=1243692, api=40, combined=1243732"
+item_properties_combined,combined_row_count,PASS,"batch=1243692, api=100, combined=1243792"
 item_properties_combined,valid_property_timestamps,PASS,Invalid rows: 0
 item_category_latest,unique_item_id,PASS,Duplicate item IDs: 0
 item_availability_latest,unique_item_id,PASS,Duplicate item IDs: 0

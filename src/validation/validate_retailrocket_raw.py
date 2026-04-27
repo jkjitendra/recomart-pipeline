@@ -194,11 +194,38 @@ def validate_api_landing(rows: list[dict[str, Any]]) -> None:
             raw_response_path = ingestion_dir / "raw_response.json"
             payload = json.loads(raw_response_path.read_text(encoding="utf-8"))
             if {"records", "next_cursor", "has_more"}.issubset(payload.keys()):
-                add_result(rows, partition_dataset_name, "raw_response_contract", "PASS", "records, next_cursor, has_more present")
+                add_result(
+                    rows,
+                    partition_dataset_name,
+                    "raw_response_contract",
+                    "PASS",
+                    "mock_records_contract: records, next_cursor, has_more present",
+                )
+                records = payload.get("records", [])
+            elif {"data", "success", "count", "total_rows", "unread_rows"}.issubset(payload.keys()):
+                records = payload.get("data", [])
+                success = bool(payload.get("success"))
+                count_matches = isinstance(records, list) and int(payload.get("count", -1)) == len(records)
+                if success and count_matches:
+                    add_result(
+                        rows,
+                        partition_dataset_name,
+                        "raw_response_contract",
+                        "PASS",
+                        "teammate_data_contract: data, success, count, total_rows, unread_rows present",
+                    )
+                else:
+                    add_result(
+                        rows,
+                        partition_dataset_name,
+                        "raw_response_contract",
+                        "FAIL",
+                        f"success={payload.get('success')}, count={payload.get('count')}, data_rows={len(records) if isinstance(records, list) else 'not_list'}",
+                    )
             else:
+                records = []
                 add_result(rows, partition_dataset_name, "raw_response_contract", "FAIL", str(sorted(payload.keys())))
 
-            records = payload.get("records", [])
             metadata_row_count = int(metadata.get("row_count", -1))
             if isinstance(records, list) and len(records) == metadata_row_count:
                 add_result(rows, partition_dataset_name, "row_count_matches_metadata", "PASS", str(len(records)))

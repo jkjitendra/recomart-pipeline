@@ -31,7 +31,7 @@ The project uses Retailrocket data only:
 - REST/mock API source archive: `data/external/retailrocket/item_properties_part2.csv`
 - Batch category hierarchy source: `data/external/retailrocket/category_tree.csv`
 
-The REST/mock API simulates an external near-real-time item catalog metadata delta feed. It fetches 10 item property records per run by default and persists cursor state between runs.
+The REST API represents an external near-real-time item catalog metadata delta feed. The teammate-hosted API serves non-repeated records from `item_properties_part2.csv` and accepts a `count` query parameter controlled by `RECOMART_CATALOG_API_PAGE_SIZE`. Mock mode remains the default for reproducible local runs and uses cursor state against the local source archive.
 
 ## Final Architecture
 
@@ -156,6 +156,24 @@ Run one Retailrocket API/mock ingestion step:
 
 ```bash
 RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Mock mode is the reproducible default for the full local pipeline. It reads from `data/external/retailrocket/item_properties_part2.csv`, fetches 10 records per run unless `RECOMART_CATALOG_API_PAGE_SIZE` is set, and persists local cursor state.
+
+Run against the teammate-hosted real API:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=false \
+RECOMART_CATALOG_API_BASE_URL="<teammate-api-base-url>" \
+RECOMART_CATALOG_API_ENDPOINT="/items" \
+RECOMART_CATALOG_API_PAGE_SIZE=50 \
+python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+The real API response uses `data`, `success`, `count`, `total_rows`, and `unread_rows`. The ingestion client sends `?count=<page_size>`, normalizes rows to `timestamp`, `itemid`, `property`, `value`, `source_system`, and `ingestion_timestamp`, and writes immutable raw snapshots under:
+
+```text
+data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
 ```
 
 API configuration variables:

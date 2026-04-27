@@ -2,8 +2,8 @@ schema_name,relation_name,relation_type,row_count,column_count,status
 staged,retailrocket_events,BASE TABLE,2756101,8,PASS
 staged,retailrocket_category_tree,BASE TABLE,1669,5,PASS
 staged,retailrocket_item_properties_batch,BASE TABLE,1243692,8,PASS
-staged,retailrocket_item_properties_api_delta,BASE TABLE,40,9,PASS
-staged,retailrocket_item_properties_combined,BASE TABLE,1243732,9,PASS
+staged,retailrocket_item_properties_api_delta,BASE TABLE,100,9,PASS
+staged,retailrocket_item_properties_combined,BASE TABLE,1243792,9,PASS
 staged,retailrocket_item_category_latest,BASE TABLE,229342,6,PASS
 staged,retailrocket_item_availability_latest,BASE TABLE,236884,7,PASS
 curated,retailrocket_interactions,BASE TABLE,2756101,13,PASS
