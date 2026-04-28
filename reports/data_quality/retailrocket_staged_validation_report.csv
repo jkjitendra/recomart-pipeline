@@ -12,21 +12,21 @@ item_properties_batch,read_parquet,PASS,"1243692 rows, 8 columns"
 item_properties_batch,required_columns,PASS,All required columns found
 item_properties_batch,row_count_positive,PASS,Found 1243692 rows
 item_properties_api_delta,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_api_delta.parquet
-item_properties_api_delta,read_parquet,PASS,"100 rows, 9 columns"
+item_properties_api_delta,read_parquet,PASS,"210 rows, 9 columns"
 item_properties_api_delta,required_columns,PASS,All required columns found
-item_properties_api_delta,row_count_positive,PASS,Found 100 rows
+item_properties_api_delta,row_count_positive,PASS,Found 210 rows
 item_properties_combined,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_combined.parquet
-item_properties_combined,read_parquet,PASS,"1243792 rows, 9 columns"
+item_properties_combined,read_parquet,PASS,"1243902 rows, 9 columns"
 item_properties_combined,required_columns,PASS,All required columns found
-item_properties_combined,row_count_positive,PASS,Found 1243792 rows
+item_properties_combined,row_count_positive,PASS,Found 1243902 rows
 item_category_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_category_latest.parquet
-item_category_latest,read_parquet,PASS,"229342 rows, 6 columns"
+item_category_latest,read_parquet,PASS,"229346 rows, 6 columns"
 item_category_latest,required_columns,PASS,All required columns found
-item_category_latest,row_count_positive,PASS,Found 229342 rows
+item_category_latest,row_count_positive,PASS,Found 229346 rows
 item_availability_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_availability_latest.parquet
-item_availability_latest,read_parquet,PASS,"236884 rows, 7 columns"
+item_availability_latest,read_parquet,PASS,"236885 rows, 7 columns"
 item_availability_latest,required_columns,PASS,All required columns found
-item_availability_latest,row_count_positive,PASS,Found 236884 rows
+item_availability_latest,row_count_positive,PASS,Found 236885 rows
 curated_interactions,file_exists,PASS,Found file: data/curated/source=retailrocket/curated_interactions.parquet
 curated_interactions,read_parquet,PASS,"2756101 rows, 13 columns"
 curated_interactions,required_columns,PASS,All required columns found
@@ -51,12 +51,12 @@ item_properties_api_delta,null_property_timestamp_ms,PASS,Null rows: 0
 item_properties_api_delta,null_item_id,PASS,Null rows: 0
 item_properties_api_delta,null_property_name,PASS,Null rows: 0
 item_properties_api_delta,null_property_value,PASS,Null rows: 0
-item_properties_combined,combined_row_count,PASS,"batch=1243692, api=100, combined=1243792"
+item_properties_combined,combined_row_count,PASS,"batch=1243692, api=210, combined=1243902"
 item_properties_combined,valid_property_timestamps,PASS,Invalid rows: 0
 item_category_latest,unique_item_id,PASS,Duplicate item IDs: 0
 item_availability_latest,unique_item_id,PASS,Duplicate item IDs: 0
 item_availability_latest,valid_availability_values,PASS,Invalid availability rows: 0
-referential_coverage,event_items_with_category,WARN,102389/235061 (0.4356)
+referential_coverage,event_items_with_category,WARN,102390/235061 (0.4356)
 referential_coverage,event_items_with_availability,WARN,108603/235061 (0.4620)
 curated_interactions,valid_interaction_weights,PASS,Invalid weights: 0
 curated_items,unique_item_id,PASS,Duplicate item IDs: 0

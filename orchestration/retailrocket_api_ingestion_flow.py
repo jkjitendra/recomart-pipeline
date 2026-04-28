@@ -25,7 +25,13 @@ def tail_text(text: str, max_lines: int = 30) -> str:
 @task
 def run_api_ingestion_command() -> dict[str, object]:
     env = os.environ.copy()
-    env.setdefault("RECOMART_CATALOG_API_MOCK_MODE", "true")
+    env.setdefault("RECOMART_CATALOG_API_MOCK_MODE", "false")
+    env.setdefault(
+        "RECOMART_CATALOG_API_BASE_URL",
+        "https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud",
+    )
+    env.setdefault("RECOMART_CATALOG_API_ENDPOINT", "/items")
+    env.setdefault("RECOMART_CATALOG_API_PAGE_SIZE", "50")
 
     command = [
         sys.executable,
@@ -53,7 +59,10 @@ def run_api_ingestion_command() -> dict[str, object]:
         "step_name": "ingest_retailrocket_catalog_api_delta",
         "module": "src.ingestion.ingest_retailrocket_catalog_api",
         "command": (
-            "RECOMART_CATALOG_API_MOCK_MODE=${RECOMART_CATALOG_API_MOCK_MODE:-true} "
+            "RECOMART_CATALOG_API_MOCK_MODE=${RECOMART_CATALOG_API_MOCK_MODE:-false} "
+            "RECOMART_CATALOG_API_BASE_URL=${RECOMART_CATALOG_API_BASE_URL:-https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud} "
+            "RECOMART_CATALOG_API_ENDPOINT=${RECOMART_CATALOG_API_ENDPOINT:-/items} "
+            "RECOMART_CATALOG_API_PAGE_SIZE=${RECOMART_CATALOG_API_PAGE_SIZE:-50} "
             "python -m src.ingestion.ingest_retailrocket_catalog_api"
         ),
         "description": "Scheduled Retailrocket catalog metadata delta ingestion.",
@@ -91,10 +100,9 @@ def retailrocket_api_ingestion_flow() -> None:
     """
     Runs one Retailrocket catalog metadata delta ingestion.
 
-    Mock mode is the default for reproducible local runs. To use the teammate-hosted API,
-    set RECOMART_CATALOG_API_MOCK_MODE=false, RECOMART_CATALOG_API_BASE_URL,
-    RECOMART_CATALOG_API_ENDPOINT, and RECOMART_CATALOG_API_PAGE_SIZE. The ingestion
-    client sends RECOMART_CATALOG_API_PAGE_SIZE as the count query parameter.
+    The teammate-hosted API is the default source. Set RECOMART_CATALOG_API_MOCK_MODE=true
+    only when a reproducible local mock run is needed. The ingestion client sends
+    RECOMART_CATALOG_API_PAGE_SIZE as the count query parameter.
 
     Prefect 3 local deployment example:
 

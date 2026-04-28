@@ -9,7 +9,6 @@ EXTERNAL_DIR = Path("data/external/retailrocket")
 
 EVENTS_PATH = EXTERNAL_DIR / "events.csv"
 ITEM_PROPERTIES_PART1_PATH = EXTERNAL_DIR / "item_properties_part1.csv"
-ITEM_PROPERTIES_PART2_PATH = EXTERNAL_DIR / "item_properties_part2.csv"
 CATEGORY_TREE_PATH = EXTERNAL_DIR / "category_tree.csv"
 
 SUMMARY_REPORT_PATH = Path("reports/retailrocket_external_summary.csv")
@@ -22,7 +21,6 @@ def ensure_files_exist() -> None:
     required_files = [
         EVENTS_PATH,
         ITEM_PROPERTIES_PART1_PATH,
-        ITEM_PROPERTIES_PART2_PATH,
         CATEGORY_TREE_PATH,
     ]
 
@@ -89,15 +87,6 @@ def inspect_events(connection: duckdb.DuckDBPyConnection) -> tuple[dict[str, Any
 
 def inspect_item_properties(connection: duckdb.DuckDBPyConnection) -> tuple[dict[str, Any], pd.DataFrame]:
     part1_relation = f"read_csv_auto('{ITEM_PROPERTIES_PART1_PATH}', header=true)"
-    part2_relation = f"read_csv_auto('{ITEM_PROPERTIES_PART2_PATH}', header=true)"
-
-    combined_relation = f"""
-        (
-            SELECT * FROM {part1_relation}
-            UNION ALL
-            SELECT * FROM {part2_relation}
-        )
-    """
 
     summary_query = f"""
         SELECT
@@ -107,14 +96,14 @@ def inspect_item_properties(connection: duckdb.DuckDBPyConnection) -> tuple[dict
             MIN(timestamp) AS min_timestamp_ms,
             MAX(timestamp) AS max_timestamp_ms,
             SUM(CASE WHEN value IS NULL THEN 1 ELSE 0 END) AS null_value_rows
-        FROM {combined_relation}
+        FROM {part1_relation}
     """
 
     row = connection.execute(summary_query).fetchdf().iloc[0].to_dict()
 
-    row["dataset_name"] = "item_properties_combined"
-    row["file_path"] = f"{ITEM_PROPERTIES_PART1_PATH}; {ITEM_PROPERTIES_PART2_PATH}"
-    row["file_size_mb"] = file_size_mb(ITEM_PROPERTIES_PART1_PATH) + file_size_mb(ITEM_PROPERTIES_PART2_PATH)
+    row["dataset_name"] = "item_properties_part1"
+    row["file_path"] = str(ITEM_PROPERTIES_PART1_PATH)
+    row["file_size_mb"] = file_size_mb(ITEM_PROPERTIES_PART1_PATH)
     row["min_timestamp_datetime"] = milliseconds_to_datetime(row["min_timestamp_ms"])
     row["max_timestamp_datetime"] = milliseconds_to_datetime(row["max_timestamp_ms"])
 
@@ -124,7 +113,7 @@ def inspect_item_properties(connection: duckdb.DuckDBPyConnection) -> tuple[dict
             COUNT(*) AS row_count,
             COUNT(DISTINCT itemid) AS distinct_items,
             COUNT(DISTINCT value) AS distinct_values
-        FROM {combined_relation}
+        FROM {part1_relation}
         GROUP BY property
         ORDER BY row_count DESC
         LIMIT 30

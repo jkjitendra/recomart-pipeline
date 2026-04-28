@@ -37,9 +37,17 @@ PIPELINE_STEPS: list[dict[str, Any]] = [
         "module": "src.ingestion.ingest_retailrocket_catalog_api",
         "description": "Land Retailrocket catalog metadata deltas from the teammate REST API or reproducible mock API.",
         "env_defaults": {
-            "RECOMART_CATALOG_API_MOCK_MODE": "true",
+            "RECOMART_CATALOG_API_MOCK_MODE": "false",
+            "RECOMART_CATALOG_API_BASE_URL": "https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud",
+            "RECOMART_CATALOG_API_ENDPOINT": "/items",
+            "RECOMART_CATALOG_API_PAGE_SIZE": "50",
         },
-        "command_prefix": "RECOMART_CATALOG_API_MOCK_MODE=${RECOMART_CATALOG_API_MOCK_MODE:-true}",
+        "command_prefix": (
+            "RECOMART_CATALOG_API_MOCK_MODE=${RECOMART_CATALOG_API_MOCK_MODE:-false} "
+            "RECOMART_CATALOG_API_BASE_URL=${RECOMART_CATALOG_API_BASE_URL:-https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud} "
+            "RECOMART_CATALOG_API_ENDPOINT=${RECOMART_CATALOG_API_ENDPOINT:-/items} "
+            "RECOMART_CATALOG_API_PAGE_SIZE=${RECOMART_CATALOG_API_PAGE_SIZE:-50}"
+        ),
     },
     {
         "step_order": 4,

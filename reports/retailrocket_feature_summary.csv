@@ -1,4 +1,4 @@
 schema_name,table_name,output_file,row_count,column_count,file_size_mb,status
-features,retailrocket_user_features,data/features/source=retailrocket/user_features.parquet,1407580,16,47.355,PASS
-features,retailrocket_item_features,data/features/source=retailrocket/item_features.parquet,235061,21,9.042,PASS
-features,retailrocket_user_item_features,data/features/source=retailrocket/user_item_features.parquet,2145179,24,81.471,PASS
+features,retailrocket_user_features,data/features/source=retailrocket/user_features.parquet,1407580,16,47.358,PASS
+features,retailrocket_item_features,data/features/source=retailrocket/item_features.parquet,235061,21,8.988,PASS
+features,retailrocket_user_item_features,data/features/source=retailrocket/user_item_features.parquet,2145179,24,81.492,PASS

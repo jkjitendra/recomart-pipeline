@@ -28,7 +28,7 @@ Show:
 - `reports/repository_structure_summary.csv`
 
 Script:
-Point out the Retailrocket batch CSV files: `events.csv`, `item_properties_part1.csv`, and `category_tree.csv`. Explain that `item_properties_part2.csv` is used by the REST/mock API as catalog metadata deltas.
+Point out the Retailrocket batch CSV files: `events.csv`, `item_properties_part1.csv`, and `category_tree.csv`. Explain that item catalog metadata deltas come from the teammate-hosted REST API, while mock mode uses deterministic local sample records for reproducible demos.
 
 ## 4. Raw Ingestion: Batch + REST/Mock API
 
@@ -46,20 +46,24 @@ Explain the raw partition layout:
 data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
 ```
 
-Mention that API ingestion defaults to 10 records per run in mock mode, supports timeout, retry, optional bearer token, and mock mode. For the teammate-hosted real API, show that `RECOMART_CATALOG_API_PAGE_SIZE` is sent as `count=<page_size>`, the response uses `data`, `success`, `count`, `total_rows`, and `unread_rows`, and the server returns non-repeated records. Explain that both real and mock contracts land into the same raw path and normalize to the same columns.
+Mention that API ingestion uses the teammate-hosted real API by default, supports timeout, retry, optional bearer token, and mock fallback mode. Show that `RECOMART_CATALOG_API_PAGE_SIZE` defaults to 50 and is sent as `count=<page_size>`, the response uses `data`, `success`, `count`, `total_rows`, and `unread_rows`, and the server returns non-repeated records. Explain that both real and mock contracts land into the same raw path and normalize to the same columns.
 
 Show command examples:
 
 ```bash
-RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
 ```bash
 RECOMART_CATALOG_API_MOCK_MODE=false \
-RECOMART_CATALOG_API_BASE_URL="<teammate-api-base-url>" \
+RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \
 RECOMART_CATALOG_API_ENDPOINT="/items" \
 RECOMART_CATALOG_API_PAGE_SIZE=50 \
 python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
 ## 5. Data Layers

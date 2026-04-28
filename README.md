@@ -28,10 +28,10 @@ The project uses Retailrocket data only:
 
 - Batch interaction source: `data/external/retailrocket/events.csv`
 - Batch item property source: `data/external/retailrocket/item_properties_part1.csv`
-- REST/mock API source archive: `data/external/retailrocket/item_properties_part2.csv`
 - Batch category hierarchy source: `data/external/retailrocket/category_tree.csv`
+- REST API source: teammate-hosted item property delta endpoint
 
-The REST API represents an external near-real-time item catalog metadata delta feed. The teammate-hosted API serves non-repeated records from `item_properties_part2.csv` and accepts a `count` query parameter controlled by `RECOMART_CATALOG_API_PAGE_SIZE`. Mock mode remains the default for reproducible local runs and uses cursor state against the local source archive.
+The REST API represents an external near-real-time item catalog metadata delta feed. The teammate-hosted API serves non-repeated item property records and accepts a `count` query parameter controlled by `RECOMART_CATALOG_API_PAGE_SIZE`. Mock mode remains the default for reproducible local runs and uses deterministic local sample records; it does not read a local second item-properties CSV from the repository.
 
 ## Final Architecture
 
@@ -148,27 +148,27 @@ Run the full Retailrocket Prefect pipeline:
 python -m orchestration.retailrocket_pipeline
 ```
 
-The flow runs batch ingestion, API/mock delta ingestion, raw validation, staged/curated preparation, staged/curated validation, DuckDB loading, feature building, feature retrieval, model training, inference, model comparison, evidence generation, final markdown report generation, and PDF generation.
+The flow runs batch ingestion, teammate REST API delta ingestion, raw validation, staged/curated preparation, staged/curated validation, DuckDB loading, feature building, feature retrieval, model training, inference, model comparison, evidence generation, final markdown report generation, and PDF generation.
 
 ## API Ingestion
 
-Run one Retailrocket API/mock ingestion step:
+Run one Retailrocket API ingestion step with the teammate-hosted endpoint:
 
 ```bash
-RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
-Mock mode is the reproducible default for the full local pipeline. It reads from `data/external/retailrocket/item_properties_part2.csv`, fetches 10 records per run unless `RECOMART_CATALOG_API_PAGE_SIZE` is set, and persists local cursor state.
-
-Run against the teammate-hosted real API:
+Equivalent explicit real API command:
 
 ```bash
 RECOMART_CATALOG_API_MOCK_MODE=false \
-RECOMART_CATALOG_API_BASE_URL="<teammate-api-base-url>" \
+RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \
 RECOMART_CATALOG_API_ENDPOINT="/items" \
 RECOMART_CATALOG_API_PAGE_SIZE=50 \
 python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
+
+The default real API URL is `https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items`. Without a `count` parameter the service returns 50 rows; RecoMart sends `?count=<RECOMART_CATALOG_API_PAGE_SIZE>` so the requested row count is explicit. The service returns new rows without repeating records.
 
 The real API response uses `data`, `success`, `count`, `total_rows`, and `unread_rows`. The ingestion client sends `?count=<page_size>`, normalizes rows to `timestamp`, `itemid`, `property`, `value`, `source_system`, and `ingestion_timestamp`, and writes immutable raw snapshots under:
 
@@ -188,6 +188,12 @@ RECOMART_CATALOG_API_STATE_FILE
 RECOMART_CATALOG_API_MOCK_MODE
 ```
 
+Use mock mode only when a fully local reproducible fallback is needed:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
 Run the optional local mock API server:
 
 ```bash
@@ -197,7 +203,10 @@ uvicorn src.ingestion.mock_retailrocket_catalog_api:app --host 127.0.0.1 --port 
 Run the ingestion client against the mock server:
 
 ```bash
-RECOMART_CATALOG_API_BASE_URL=http://127.0.0.1:8000 python -m src.ingestion.ingest_retailrocket_catalog_api
+RECOMART_CATALOG_API_MOCK_MODE=false \
+RECOMART_CATALOG_API_BASE_URL=http://127.0.0.1:8000 \
+RECOMART_CATALOG_API_ENDPOINT=/api/item-properties \
+python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
 Schedule API ingestion every 30 minutes with Prefect 3:
@@ -209,7 +218,7 @@ prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api
   --pool default-agent-pool
 ```
 
-The API ingestion flow defaults to mock mode unless `RECOMART_CATALOG_API_MOCK_MODE` is already set.
+The API ingestion flow defaults to the teammate-hosted REST API. Set `RECOMART_CATALOG_API_MOCK_MODE=true` only for local fallback runs.
 
 ## Training and Inference
 

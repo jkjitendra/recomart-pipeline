@@ -1,20 +1,28 @@
 from __future__ import annotations
 
-import csv
-from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-MOCK_SOURCE_PATH = PROJECT_ROOT / "data/external/retailrocket/item_properties_part2.csv"
+MOCK_TOTAL_ROWS = 1000
+MOCK_BASE_RECORDS = [
+    {"timestamp": 1433041200000, "itemid": 183478, "property": "561", "value": "769062"},
+    {"timestamp": 1439694000000, "itemid": 132256, "property": "976", "value": "n26.400 1135780"},
+    {"timestamp": 1435460400000, "itemid": 420307, "property": "921", "value": "1149317 1257525"},
+    {"timestamp": 1431831600000, "itemid": 403324, "property": "917", "value": "1204143"},
+    {"timestamp": 1435460400000, "itemid": 230701, "property": "521", "value": "769062"},
+    {"timestamp": 1433041200000, "itemid": 286407, "property": "202", "value": "820407"},
+    {"timestamp": 1438484400000, "itemid": 256368, "property": "888", "value": "437265 1296497 n24.000"},
+    {"timestamp": 1437879600000, "itemid": 307534, "property": "888", "value": "150169 212349 1095303"},
+    {"timestamp": 1431226800000, "itemid": 8921, "property": "categoryid", "value": "1188"},
+    {"timestamp": 1431831600000, "itemid": 215180, "property": "71", "value": "1096621"},
+]
 
 app = FastAPI(
     title="RecoMart Retailrocket Catalog Metadata Mock API",
     description=(
-        "Mock/demo API that serves Retailrocket item property records from "
-        "data/external/retailrocket/item_properties_part2.csv. It implements "
+        "Mock/demo API that serves deterministic Retailrocket-like item property records. It implements "
         "GET /api/item-properties?limit=10&cursor=<cursor> for local ingestion tests. "
         "The count query parameter is accepted as an alias for limit so client examples "
         "match the teammate-hosted API contract."
@@ -33,41 +41,30 @@ def parse_cursor(cursor: str | None) -> int:
         raise HTTPException(status_code=400, detail="cursor must be an integer offset") from exc
 
 
-def coerce_record(row: dict[str, str]) -> dict[str, Any]:
+def generate_mock_record(index: int) -> dict[str, Any]:
+    base_record = MOCK_BASE_RECORDS[index % len(MOCK_BASE_RECORDS)]
+    cycle = index // len(MOCK_BASE_RECORDS)
+
     return {
-        "timestamp": int(row["timestamp"]),
-        "itemid": int(row["itemid"]),
-        "property": str(row["property"]),
-        "value": str(row["value"]),
+        "timestamp": int(base_record["timestamp"]),
+        "itemid": int(base_record["itemid"]) + cycle,
+        "property": str(base_record["property"]),
+        "value": str(base_record["value"]),
     }
 
 
 def read_page(limit: int, cursor: str | None) -> dict[str, Any]:
-    if not MOCK_SOURCE_PATH.exists():
-        raise HTTPException(status_code=500, detail=f"Mock source file not found: {MOCK_SOURCE_PATH}")
-
     offset = parse_cursor(cursor)
-    records: list[dict[str, Any]] = []
-    has_more = False
+    if offset >= MOCK_TOTAL_ROWS:
+        raise HTTPException(status_code=416, detail="cursor is beyond the mock data range")
 
-    with MOCK_SOURCE_PATH.open("r", encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file)
-
-        for index, row in enumerate(reader):
-            if index < offset:
-                continue
-
-            if len(records) < limit:
-                records.append(coerce_record(row))
-                continue
-
-            has_more = True
-            break
+    end_offset = min(offset + limit, MOCK_TOTAL_ROWS)
+    records = [generate_mock_record(index) for index in range(offset, end_offset)]
 
     return {
         "records": records,
-        "next_cursor": str(offset + len(records)),
-        "has_more": has_more,
+        "next_cursor": str(end_offset),
+        "has_more": end_offset < MOCK_TOTAL_ROWS,
     }
 
 

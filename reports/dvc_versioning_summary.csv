@@ -1,8 +1,8 @@
 pipeline_layer,description,dvc_file,tracked_path,md5,size_bytes,nfiles,versioning_tool,tracked_in_git
-external_data,Retailrocket original external CSV dataset,data/external/retailrocket.dvc,retailrocket,19cdee87944c59fc15c51396fe37cd88.dir,987498023,4,DVC,True
-raw_batch_data,Retailrocket raw batch ingestion snapshots,data/raw/source=retailrocket_batch.dvc,source=retailrocket_batch,64b4dfe821810d1a90d82aa47c5b153e.dir,1735709514,18,DVC,True
-raw_api_data,Retailrocket raw REST API catalog delta snapshots,data/raw/source=retailrocket_api.dvc,source=retailrocket_api,722c52c0ffc988a4ec9b34ee79551530.dir,50934,26,DVC,True
-staged_data,Retailrocket staged Parquet data,data/staged/source=retailrocket.dvc,source=retailrocket,c4eddc3e8f286f1d121854ba5c939a19.dir,79166198,7,DVC,True
-curated_data,Retailrocket curated analytical Parquet data,data/curated/source=retailrocket.dvc,source=retailrocket,5d08f15c3e83a9fe726e1fc3263a831c.dir,157367912,3,DVC,True
-feature_data,Retailrocket feature Parquet data,data/features/source=retailrocket.dvc,source=retailrocket,106b79090dc19b7af667ef5bd993a3d3.dir,144602496,3,DVC,True
-model_artifact,Retailrocket trained recommendation model artifacts,models/retailrocket.dvc,retailrocket,c6b274a3aef28f28a6ac0084320c46fa.dir,1226758,2,DVC,True
+external_data,Retailrocket original external CSV dataset,data/external/retailrocket.dvc,retailrocket,a9cdd04c0b079c0a7becea06b1f4c684.dir,578568116,3,DVC,True
+raw_batch_data,Retailrocket raw batch ingestion snapshots,data/raw/source=retailrocket_batch.dvc,source=retailrocket_batch,cf01e1dd3404797e1850ef06b9761760.dir,2314279352,24,DVC,True
+raw_api_data,Retailrocket raw REST API catalog delta snapshots,data/raw/source=retailrocket_api.dvc,source=retailrocket_api,da17fa3054c65f9043d03e51b80b24a8.dir,117279,41,DVC,True
+staged_data,Retailrocket staged Parquet data,data/staged/source=retailrocket.dvc,source=retailrocket,d269c649a76843cbb8081fbd39b88d7a.dir,79161039,7,DVC,True
+curated_data,Retailrocket curated analytical Parquet data,data/curated/source=retailrocket.dvc,source=retailrocket,3d593ee350f4f070ca353a8df1413453.dir,157326798,3,DVC,True
+feature_data,Retailrocket feature Parquet data,data/features/source=retailrocket.dvc,source=retailrocket,3c75f7bc3979a697888faaa8ace22757.dir,144581018,3,DVC,True
+model_artifact,Retailrocket trained recommendation model artifacts,models/retailrocket.dvc,retailrocket,2912611cc64ad5b0dce549382cd5e9fb.dir,1226758,2,DVC,True

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import csv
 import hashlib
 import json
 import logging
@@ -21,7 +20,22 @@ RAW_ROOT = PROJECT_ROOT / "data/raw/source=retailrocket_api"
 LOG_PATH = PROJECT_ROOT / "logs/retailrocket_catalog_api_ingestion.log"
 SUMMARY_PATH = PROJECT_ROOT / "reports/retailrocket_api_ingestion_summary.csv"
 DEFAULT_STATE_PATH = RAW_ROOT / "_state/item_properties_delta_state.json"
-MOCK_SOURCE_PATH = PROJECT_ROOT / "data/external/retailrocket/item_properties_part2.csv"
+DEFAULT_REAL_API_BASE_URL = "https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud"
+DEFAULT_REAL_API_ENDPOINT = "/items"
+DEFAULT_PAGE_SIZE = 50
+MOCK_TOTAL_ROWS = 1000
+MOCK_BASE_RECORDS = [
+    {"timestamp": 1433041200000, "itemid": 183478, "property": "561", "value": "769062"},
+    {"timestamp": 1439694000000, "itemid": 132256, "property": "976", "value": "n26.400 1135780"},
+    {"timestamp": 1435460400000, "itemid": 420307, "property": "921", "value": "1149317 1257525"},
+    {"timestamp": 1431831600000, "itemid": 403324, "property": "917", "value": "1204143"},
+    {"timestamp": 1435460400000, "itemid": 230701, "property": "521", "value": "769062"},
+    {"timestamp": 1433041200000, "itemid": 286407, "property": "202", "value": "820407"},
+    {"timestamp": 1438484400000, "itemid": 256368, "property": "888", "value": "437265 1296497 n24.000"},
+    {"timestamp": 1437879600000, "itemid": 307534, "property": "888", "value": "150169 212349 1095303"},
+    {"timestamp": 1431226800000, "itemid": 8921, "property": "categoryid", "value": "1188"},
+    {"timestamp": 1431831600000, "itemid": 215180, "property": "71", "value": "1096621"},
+]
 
 SOURCE_SYSTEM = "retailrocket_api"
 DATA_TYPE = "item_properties_delta"
@@ -79,19 +93,19 @@ def env_path(name: str, default: Path) -> Path:
 
 
 def load_config() -> ApiConfig:
-    page_size = int(os.getenv("RECOMART_CATALOG_API_PAGE_SIZE", "10"))
+    page_size = int(os.getenv("RECOMART_CATALOG_API_PAGE_SIZE", str(DEFAULT_PAGE_SIZE)))
 
     if page_size <= 0:
         raise ValueError("RECOMART_CATALOG_API_PAGE_SIZE must be positive.")
 
     return ApiConfig(
-        base_url=os.getenv("RECOMART_CATALOG_API_BASE_URL", "http://127.0.0.1:8000"),
-        endpoint=os.getenv("RECOMART_CATALOG_API_ENDPOINT", "/api/item-properties"),
+        base_url=os.getenv("RECOMART_CATALOG_API_BASE_URL", DEFAULT_REAL_API_BASE_URL),
+        endpoint=os.getenv("RECOMART_CATALOG_API_ENDPOINT", DEFAULT_REAL_API_ENDPOINT),
         timeout_sec=float(os.getenv("RECOMART_CATALOG_API_TIMEOUT_SEC", "30")),
         page_size=page_size,
         auth_token=os.getenv("RECOMART_CATALOG_API_AUTH_TOKEN") or None,
         state_file=env_path("RECOMART_CATALOG_API_STATE_FILE", DEFAULT_STATE_PATH),
-        mock_mode=parse_bool(os.getenv("RECOMART_CATALOG_API_MOCK_MODE"), default=True),
+        mock_mode=parse_bool(os.getenv("RECOMART_CATALOG_API_MOCK_MODE"), default=False),
     )
 
 
@@ -197,38 +211,25 @@ def parse_cursor(cursor: str | None) -> int:
     return max(int(cursor), 0)
 
 
-def coerce_mock_record(row: dict[str, str]) -> dict[str, Any]:
+def generate_mock_record(index: int) -> dict[str, Any]:
+    base_record = MOCK_BASE_RECORDS[index % len(MOCK_BASE_RECORDS)]
+    cycle = index // len(MOCK_BASE_RECORDS)
+
     return {
-        "timestamp": int(row["timestamp"]),
-        "itemid": int(row["itemid"]),
-        "property": str(row["property"]),
-        "value": str(row["value"]),
+        "timestamp": int(base_record["timestamp"]),
+        "itemid": int(base_record["itemid"]) + cycle,
+        "property": str(base_record["property"]),
+        "value": str(base_record["value"]),
     }
 
 
 def read_mock_page(limit: int, cursor: str | None) -> dict[str, Any]:
-    if not MOCK_SOURCE_PATH.exists():
-        raise FileNotFoundError(f"Mock source file not found: {MOCK_SOURCE_PATH}")
-
     offset = parse_cursor(cursor)
-    records: list[dict[str, Any]] = []
-    has_more = False
+    end_offset = min(offset + limit, MOCK_TOTAL_ROWS)
+    records = [generate_mock_record(index) for index in range(offset, end_offset)]
+    has_more = end_offset < MOCK_TOTAL_ROWS
 
-    with MOCK_SOURCE_PATH.open("r", encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file)
-
-        for index, row in enumerate(reader):
-            if index < offset:
-                continue
-
-            if len(records) < limit:
-                records.append(coerce_mock_record(row))
-                continue
-
-            has_more = True
-            break
-
-    next_cursor = str(offset + len(records)) if records else str(offset)
+    next_cursor = str(end_offset)
 
     return {
         "records": records,
@@ -245,8 +246,7 @@ def fetch_page(
 ) -> dict[str, Any]:
     if config.mock_mode:
         logger.info(
-            "Using mock mode source=%s limit=%s cursor=%s",
-            MOCK_SOURCE_PATH,
+            "Using mock mode source=embedded_deterministic_catalog_delta_sample limit=%s cursor=%s",
             config.page_size,
             cursor,
         )
@@ -398,7 +398,7 @@ def write_landing_files(
         "normalized_csv_file": str(normalized_csv_path.relative_to(PROJECT_ROOT)),
         "normalized_parquet_file": str(normalized_parquet_path.relative_to(PROJECT_ROOT)),
         "ingested_at": datetime.now().isoformat(timespec="seconds"),
-        "mock_source_file": str(MOCK_SOURCE_PATH.relative_to(PROJECT_ROOT)) if config.mock_mode else "",
+        "mock_source": "embedded_deterministic_catalog_delta_sample" if config.mock_mode else "",
     }
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 

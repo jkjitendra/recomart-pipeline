@@ -94,14 +94,12 @@ def generate_report() -> str:
     lines.append("RecoMart uses Retailrocket data only.")
     lines.append("")
     lines.append("- Batch CSV source: `events.csv`, `item_properties_part1.csv`, and `category_tree.csv`.")
+    lines.append("- REST API source: teammate-hosted item property delta endpoint.")
     lines.append(
-        "- REST API source: teammate-hosted item property delta records served from `item_properties_part2.csv`."
+        "- Mock API fallback: reproducible local mode that uses deterministic sample records with cursor state."
     )
     lines.append(
-        "- Mock API fallback: reproducible local mode that reads `item_properties_part2.csv` with cursor state."
-    )
-    lines.append(
-        "- API default batch size: 10 records per run; real API mode sends `count=<page_size>` and the server "
+        "- API default batch size: 50 records per run; real API mode sends `count=<page_size>` and the server "
         "returns non-repeated rows."
     )
     lines.append("")
@@ -132,7 +130,13 @@ def generate_report() -> str:
     lines.append("RECOMART_CATALOG_API_MOCK_MODE")
     lines.append("```")
     lines.append("")
-    lines.append("Mock mode command:")
+    lines.append("Default real API command:")
+    lines.append("")
+    lines.append("```bash")
+    lines.append("python -m src.ingestion.ingest_retailrocket_catalog_api")
+    lines.append("```")
+    lines.append("")
+    lines.append("Mock fallback command:")
     lines.append("")
     lines.append("```bash")
     lines.append("RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api")
@@ -142,11 +146,17 @@ def generate_report() -> str:
     lines.append("")
     lines.append("```bash")
     lines.append("RECOMART_CATALOG_API_MOCK_MODE=false \\")
-    lines.append('RECOMART_CATALOG_API_BASE_URL="<teammate-api-base-url>" \\')
+    lines.append('RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \\')
     lines.append('RECOMART_CATALOG_API_ENDPOINT="/items" \\')
     lines.append("RECOMART_CATALOG_API_PAGE_SIZE=50 \\")
     lines.append("python -m src.ingestion.ingest_retailrocket_catalog_api")
     lines.append("```")
+    lines.append("")
+    lines.append(
+        "The default runtime configuration uses the teammate-hosted endpoint "
+        "`https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items` with "
+        "`count=<RECOMART_CATALOG_API_PAGE_SIZE>`. The API serves new rows without repetition."
+    )
 
     lines.append("\n## 4. Raw Data Lake Layout")
     lines.append("Raw data uses one timestamp partition field:")
@@ -368,17 +378,23 @@ python -m orchestration.retailrocket_pipeline
 ## Run API Ingestion Only
 
 ```bash
-RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
-Real API mode:
+Explicit real API mode:
 
 ```bash
 RECOMART_CATALOG_API_MOCK_MODE=false \\
-RECOMART_CATALOG_API_BASE_URL="<teammate-api-base-url>" \\
+RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \\
 RECOMART_CATALOG_API_ENDPOINT="/items" \\
 RECOMART_CATALOG_API_PAGE_SIZE=50 \\
 python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Mock fallback:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
 ## Schedule API Ingestion Every 30 Minutes

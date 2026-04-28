@@ -28,17 +28,23 @@ python -m orchestration.retailrocket_pipeline
 ## Run API Ingestion Only
 
 ```bash
-RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
-Real API mode:
+Explicit real API mode:
 
 ```bash
 RECOMART_CATALOG_API_MOCK_MODE=false \
-RECOMART_CATALOG_API_BASE_URL="<teammate-api-base-url>" \
+RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \
 RECOMART_CATALOG_API_ENDPOINT="/items" \
 RECOMART_CATALOG_API_PAGE_SIZE=50 \
 python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Mock fallback:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
 ```
 
 ## Schedule API Ingestion Every 30 Minutes
