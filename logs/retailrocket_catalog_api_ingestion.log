@@ -1,0 +1,177 @@
+2026-04-26 23:01:21,486 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260426_230121 mock_mode=True state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-26 23:01:21,487 | INFO | Using mock mode source=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/external/retailrocket/item_properties_part2.csv limit=10 cursor=None
+2026-04-26 23:01:21,538 | INFO | Retailrocket catalog API ingestion succeeded rows=10 next_cursor=10 has_more=True landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260426_230121
+2026-04-26 23:05:42,294 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260426_230542 mock_mode=True state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-26 23:05:42,296 | INFO | Using mock mode source=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/external/retailrocket/item_properties_part2.csv limit=10 cursor=10
+2026-04-26 23:05:42,346 | INFO | Retailrocket catalog API ingestion succeeded rows=10 next_cursor=20 has_more=True landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260426_230542
+2026-04-27 18:01:02,623 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260427_180102 mock_mode=True state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-27 18:01:02,624 | INFO | Using mock mode source=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/external/retailrocket/item_properties_part2.csv limit=10 cursor=20
+2026-04-27 18:01:02,743 | INFO | Retailrocket catalog API ingestion succeeded rows=10 next_cursor=30 has_more=True landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_180102
+2026-04-27 18:05:48,365 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260427_180548 mock_mode=True state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-27 18:05:48,366 | INFO | Using mock mode source=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/external/retailrocket/item_properties_part2.csv limit=10 cursor=30
+2026-04-27 18:05:48,425 | INFO | Retailrocket catalog API ingestion succeeded rows=10 next_cursor=40 has_more=True landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_180548
+2026-04-27 23:43:51,148 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260427_234351 mock_mode=True state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-27 23:43:51,153 | INFO | Using mock mode source=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/external/retailrocket/item_properties_part2.csv limit=10 cursor=40
+2026-04-27 23:43:51,231 | INFO | Retailrocket catalog API ingestion succeeded rows=10 next_cursor=50 has_more=True landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_234351
+2026-04-27 23:56:05,605 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260427_235605 mock_mode=False state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-27 23:56:05,607 | INFO | Fetching Retailrocket API page attempt=1 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-27 23:56:05,614 | WARNING | API request failed attempt=1 error=HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-04-27 23:56:07,119 | INFO | Fetching Retailrocket API page attempt=2 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-27 23:56:07,123 | WARNING | API request failed attempt=2 error=HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-04-27 23:56:10,126 | INFO | Fetching Retailrocket API page attempt=3 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-27 23:56:10,130 | WARNING | API request failed attempt=3 error=HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-04-27 23:56:10,130 | ERROR | API request failed after all retries.
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 488, in _make_request
+    raise new_e
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connection.py", line 759, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connection.py", line 211, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/adapters.py", line 645, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/src/ingestion/ingest_retailrocket_catalog_api.py", line 175, in request_api_page
+    response = requests.get(
+               ^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/sessions.py", line 592, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/sessions.py", line 706, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/adapters.py", line 678, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-04-27 23:56:10,138 | ERROR | Retailrocket catalog API ingestion failed.
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connection.py", line 204, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/util/connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 488, in _make_request
+    raise new_e
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connection.py", line 759, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connection.py", line 211, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/adapters.py", line 645, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/urllib3/util/retry.py", line 535, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/src/ingestion/ingest_retailrocket_catalog_api.py", line 479, in main
+    payload = fetch_page(config=config, cursor=state_before.get("cursor"), logger=logger)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/src/ingestion/ingest_retailrocket_catalog_api.py", line 255, in fetch_page
+    return request_api_page(config=config, logger=logger)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/src/ingestion/ingest_retailrocket_catalog_api.py", line 175, in request_api_page
+    response = requests.get(
+               ^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/sessions.py", line 592, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/sessions.py", line 706, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/envs/recomart/lib/python3.11/site-packages/requests/adapters.py", line 678, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Max retries exceeded with url: /items?count=50 (Caused by NameResolutionError("HTTPSConnection(host='recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud', port=443): Failed to resolve 'recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud' ([Errno 8] nodename nor servname provided, or not known)"))
+2026-04-27 23:58:03,778 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260427_235803 mock_mode=False state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-27 23:58:03,781 | INFO | Fetching Retailrocket API page attempt=1 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-27 23:58:04,864 | INFO | Retailrocket catalog API ingestion succeeded rows=50 next_cursor=None has_more=None landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_235803
+2026-04-28 22:26:49,427 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260428_222649 mock_mode=True state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-28 22:26:49,428 | INFO | Using mock mode source=embedded_deterministic_catalog_delta_sample limit=10 cursor=50
+2026-04-28 22:26:49,480 | INFO | Retailrocket catalog API ingestion succeeded rows=10 next_cursor=60 has_more=True landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_222649
+2026-04-28 22:39:35,264 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260428_223935 mock_mode=False state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-28 22:39:35,266 | INFO | Fetching Retailrocket API page attempt=1 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-28 22:39:36,877 | INFO | Retailrocket catalog API ingestion succeeded rows=50 next_cursor=None has_more=None landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_223935
+2026-04-28 22:43:13,597 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260428_224313 mock_mode=False state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-28 22:43:13,598 | INFO | Fetching Retailrocket API page attempt=1 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-28 22:43:15,185 | INFO | Retailrocket catalog API ingestion succeeded rows=50 next_cursor=None has_more=None landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_224313
+2026-04-28 23:22:29,653 | INFO | Starting Retailrocket catalog API ingestion ingestion_timestamp=20260428_232229 mock_mode=False state_file=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/_state/item_properties_delta_state.json
+2026-04-28 23:22:29,654 | INFO | Fetching Retailrocket API page attempt=1 url=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items count=50 timeout=30.0
+2026-04-28 23:22:30,764 | INFO | Retailrocket catalog API ingestion succeeded rows=50 next_cursor=None has_more=None landing_path=/Users/jk/Downloads/BITS Pilani/Sem 2/Data Management for ML (DMML)/Assignments/recomart-pipeline/data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_232229

@@ -1,37 +1,63 @@
 dataset_name,check_name,status,details
 events,file_exists,PASS,Found file: data/staged/source=retailrocket/events.parquet
-events,read_parquet,PASS,Successfully read file with 2756101 rows and 8 columns
-events,required_columns,PASS,"All required columns found: ['event_timestamp_ms', 'event_datetime', 'visitor_id', 'event_type', 'item_id', 'transaction_id', '_source_system', '_source_file']"
+events,read_parquet,PASS,"2756101 rows, 8 columns"
+events,required_columns,PASS,All required columns found
 events,row_count_positive,PASS,Found 2756101 rows
 category_tree,file_exists,PASS,Found file: data/staged/source=retailrocket/category_tree.parquet
-category_tree,read_parquet,PASS,Successfully read file with 1669 rows and 5 columns
-category_tree,required_columns,PASS,"All required columns found: ['category_id', 'parent_category_id', 'is_root_category', '_source_system', '_source_file']"
+category_tree,read_parquet,PASS,"1669 rows, 5 columns"
+category_tree,required_columns,PASS,All required columns found
 category_tree,row_count_positive,PASS,Found 1669 rows
-item_properties_selected,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_selected.parquet
-item_properties_selected,read_parquet,PASS,Successfully read file with 2291853 rows and 7 columns
-item_properties_selected,required_columns,PASS,"All required columns found: ['property_timestamp_ms', 'property_datetime', 'item_id', 'property_name', 'property_value', '_source_part', '_source_system']"
-item_properties_selected,row_count_positive,PASS,Found 2291853 rows
+item_properties_batch,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_batch.parquet
+item_properties_batch,read_parquet,PASS,"1243692 rows, 8 columns"
+item_properties_batch,required_columns,PASS,All required columns found
+item_properties_batch,row_count_positive,PASS,Found 1243692 rows
+item_properties_api_delta,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_api_delta.parquet
+item_properties_api_delta,read_parquet,PASS,"260 rows, 9 columns"
+item_properties_api_delta,required_columns,PASS,All required columns found
+item_properties_api_delta,row_count_positive,PASS,Found 260 rows
+item_properties_combined,file_exists,PASS,Found file: data/staged/source=retailrocket/item_properties_combined.parquet
+item_properties_combined,read_parquet,PASS,"1243952 rows, 9 columns"
+item_properties_combined,required_columns,PASS,All required columns found
+item_properties_combined,row_count_positive,PASS,Found 1243952 rows
 item_category_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_category_latest.parquet
-item_category_latest,read_parquet,PASS,Successfully read file with 417053 rows and 6 columns
-item_category_latest,required_columns,PASS,"All required columns found: ['item_id', 'category_id', 'category_timestamp_ms', 'category_datetime', '_source_system', '_source_file']"
-item_category_latest,row_count_positive,PASS,Found 417053 rows
+item_category_latest,read_parquet,PASS,"229346 rows, 6 columns"
+item_category_latest,required_columns,PASS,All required columns found
+item_category_latest,row_count_positive,PASS,Found 229346 rows
 item_availability_latest,file_exists,PASS,Found file: data/staged/source=retailrocket/item_availability_latest.parquet
-item_availability_latest,read_parquet,PASS,Successfully read file with 417053 rows and 7 columns
-item_availability_latest,required_columns,PASS,"All required columns found: ['item_id', 'available_raw_value', 'is_available', 'availability_timestamp_ms', 'availability_datetime', '_source_system', '_source_file']"
-item_availability_latest,row_count_positive,PASS,Found 417053 rows
-events,valid_event_types,PASS,Only expected event types found
-events,null_timestamp,PASS,No nulls found
-events,null_visitor,PASS,No nulls found
-events,null_event_type,PASS,No nulls found
-events,null_item,PASS,No nulls found
-events,transaction_rows_have_transaction_id,PASS,All transaction rows have transaction_id
-events,non_transaction_rows_without_transaction_id,PASS,Non-transaction rows do not have transaction_id
-events,event_type_distribution,PASS,"[{'event_type': 'view', 'row_count': 2664312}, {'event_type': 'addtocart', 'row_count': 69332}, {'event_type': 'transaction', 'row_count': 22457}]"
-category_tree,unique_category_id,PASS,No duplicate category_id values
-category_tree,root_category_flag,PASS,Root category flag is consistent
-item_properties_selected,selected_property_names,PASS,Only categoryid and available are present
-item_category_latest,unique_item_id,PASS,One latest category row per item
-item_availability_latest,unique_item_id,PASS,One latest availability row per item
-item_availability_latest,valid_availability_values,PASS,All availability values are 0 or 1
-referential_coverage,event_items_with_category,PASS,185246/235061 event items have latest category coverage (0.7881)
-referential_coverage,event_items_with_availability,PASS,185246/235061 event items have latest availability coverage (0.7881)
+item_availability_latest,read_parquet,PASS,"236885 rows, 7 columns"
+item_availability_latest,required_columns,PASS,All required columns found
+item_availability_latest,row_count_positive,PASS,Found 236885 rows
+curated_interactions,file_exists,PASS,Found file: data/curated/source=retailrocket/curated_interactions.parquet
+curated_interactions,read_parquet,PASS,"2756101 rows, 13 columns"
+curated_interactions,required_columns,PASS,All required columns found
+curated_interactions,row_count_positive,PASS,Found 2756101 rows
+curated_items,file_exists,PASS,Found file: data/curated/source=retailrocket/curated_items.parquet
+curated_items,read_parquet,PASS,"235061 rows, 16 columns"
+curated_items,required_columns,PASS,All required columns found
+curated_items,row_count_positive,PASS,Found 235061 rows
+curated_user_item_interactions,file_exists,PASS,Found file: data/curated/source=retailrocket/curated_user_item_interactions.parquet
+curated_user_item_interactions,read_parquet,PASS,"2145179 rows, 19 columns"
+curated_user_item_interactions,required_columns,PASS,All required columns found
+curated_user_item_interactions,row_count_positive,PASS,Found 2145179 rows
+events,valid_event_types,PASS,Invalid rows: 0
+events,valid_timestamps,PASS,Invalid timestamp rows: 0
+events,null_visitor_id,PASS,Null rows: 0
+events,null_event_type,PASS,Null rows: 0
+events,null_item_id,PASS,Null rows: 0
+events,duplicate_event_rows,WARN,Duplicate event groups: 458
+category_tree,unique_category_id,PASS,Duplicate category IDs: 0
+item_properties_batch,selected_property_names,PASS,Unexpected batch property rows: 0
+item_properties_api_delta,null_property_timestamp_ms,PASS,Null rows: 0
+item_properties_api_delta,null_item_id,PASS,Null rows: 0
+item_properties_api_delta,null_property_name,PASS,Null rows: 0
+item_properties_api_delta,null_property_value,PASS,Null rows: 0
+item_properties_combined,combined_row_count,PASS,"batch=1243692, api=260, combined=1243952"
+item_properties_combined,valid_property_timestamps,PASS,Invalid rows: 0
+item_category_latest,unique_item_id,PASS,Duplicate item IDs: 0
+item_availability_latest,unique_item_id,PASS,Duplicate item IDs: 0
+item_availability_latest,valid_availability_values,PASS,Invalid availability rows: 0
+referential_coverage,event_items_with_category,WARN,102390/235061 (0.4356)
+referential_coverage,event_items_with_availability,WARN,108603/235061 (0.4620)
+curated_interactions,valid_interaction_weights,PASS,Invalid weights: 0
+curated_items,unique_item_id,PASS,Duplicate item IDs: 0
+curated_user_item_interactions,unique_user_item_key,PASS,Duplicate user-item keys: 0

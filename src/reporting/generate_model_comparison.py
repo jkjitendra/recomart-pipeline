@@ -17,6 +17,16 @@ CONTENT_SUMMARY_PATH = REPORTS_DIR / "retailrocket_content_model_training_summar
 MODEL_COMPARISON_PATH = REPORTS_DIR / "retailrocket_model_comparison.csv"
 MODEL_COMPARISON_PLOT_PATH = PLOTS_DIR / "retailrocket_model_comparison_metrics.png"
 
+MODEL_ARTIFACTS = {
+    "global_popularity_baseline": "models/retailrocket/popularity_recommender.pkl",
+    "content_based_filtering": "models/retailrocket/content_based_recommender.pkl",
+}
+
+MODEL_REPORTS = {
+    "global_popularity_baseline": "reports/retailrocket_model_training_summary.csv",
+    "content_based_filtering": "reports/retailrocket_content_model_training_summary.csv",
+}
+
 
 def load_model_summary(path: Path, model_family: str) -> pd.DataFrame:
     if not path.exists():
@@ -24,6 +34,8 @@ def load_model_summary(path: Path, model_family: str) -> pd.DataFrame:
 
     df = pd.read_csv(path)
     df["model_family"] = model_family
+    df["model_artifact_path"] = MODEL_ARTIFACTS[model_family]
+    df["training_report_path"] = MODEL_REPORTS[model_family]
     return df
 
 
@@ -58,6 +70,8 @@ def main() -> None:
         "precision_at_10",
         "recall_at_10",
         "ndcg_at_10",
+        "model_artifact_path",
+        "training_report_path",
     ]
 
     selected_columns = [

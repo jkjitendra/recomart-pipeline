@@ -1,6 +1,0 @@
-outs:
-- md5: 4c949baf4d1f10f63deb33acfaee42db.dir
-  size: 152717
-  nfiles: 4
-  hash: md5
-  path: source=dummyjson

@@ -10,4 +10,4 @@ retailrocket_item_features,"addtocart_rate, transaction_rate, cart_to_transactio
 retailrocket_user_item_features,"view_count, addtocart_count, transaction_count",mart.retailrocket_user_item_interactions,Aggregate user-item event counts by event type.,Implicit feedback model training
 retailrocket_user_item_features,implicit_label,features.retailrocket_user_item_features,Encode interaction strength: view < addtocart < transaction.,Recommendation target signal
 retailrocket_user_item_features,strongest_event_type,features.retailrocket_user_item_features,Select strongest observed user-item event type.,Interpretability and behavioral analysis
-dummyjson_feature_registry,"user, item, interaction feature views",configs/feature_store/dummyjson_feature_registry.json,"Custom registry maps feature views to entities, source paths, and intended usage.",Feature store demonstration
+retailrocket_feature_registry,"user, item, user-item feature views",configs/feature_store/retailrocket_feature_registry.json,"Custom registry maps Retailrocket feature views to entities, source paths, versions, and intended usage.",Feature store demonstration

@@ -1,221 +1,347 @@
-# RecoMart: Data Management Pipeline for ML-Based Recommendation
+# RecoMart Retailrocket Recommendation Pipeline
 
-This project implements an end-to-end data management and machine learning pipeline for recommendation systems. It covers ingestion, inspection, validation, staged storage, DuckDB warehousing, feature engineering, feature registry concepts, model training, MLflow tracking, DVC versioning, inference, and Prefect orchestration.
+RecoMart is a Retailrocket-only end-to-end data management pipeline for recommendation modeling. The implementation ingests batch CSV interaction data and REST/mock API item metadata deltas, stores raw snapshots in a partitioned local data lake, validates and prepares data, loads a DuckDB warehouse, builds feature tables and a custom feature registry, trains Retailrocket recommendation models, tracks runs with MLflow, orchestrates execution with Prefect, and generates reproducible assignment evidence.
 
-# 1. Project Objective
-The objective is to build a reproducible ML data pipeline that converts raw recommendation data into validated features and trained recommender models. DummyJSON is used as a small API-based demo dataset, while Retailrocket is used as the main large-scale recommendation dataset.
+## 1. Problem Formulation
+The business goal is to recommend relevant products to Retailrocket users from interaction history and catalog metadata. The pipeline produces validated datasets, feature tables, model artifacts, inference outputs, lineage metadata, and a consolidated report suitable for submission.
 
-# 2. Tools Used and Why
-| Tool | Usage |
-|---|---|
-| Python | Main implementation language |
-| pandas | Data inspection, summaries, reports |
-| DuckDB | Local analytical warehouse and SQL transformation engine |
-| Parquet | Efficient staged and feature storage format |
-| DVC | Versioning large datasets and model artifacts |
-| Git | Versioning source code and lightweight reports |
-| MLflow | Experiment tracking and metric logging |
-| Prefect | Pipeline orchestration |
-| Docker | Available for containerized execution |
+- Recommendation target: rank candidate items for users.
+- Main model: Retailrocket content-based recommender.
+- Baseline model: event-weighted Retailrocket popularity recommender.
+- Metrics: HitRate@10, Precision@10, Recall@10, and NDCG@10.
 
+## 2. Data Sources
+RecoMart uses Retailrocket data only.
 
-# 3. Repository Structure
-```text
-configs/          Feature registry configuration
-data/external/    Retailrocket source data tracked by DVC
-data/raw/         DummyJSON API data
-data/staged/      Cleaned Parquet datasets tracked by DVC
-data/features/    ML feature datasets tracked by DVC
-data/warehouse/   DuckDB local warehouse
-models/           Trained model artifacts tracked by DVC
-reports/          CSV summaries, final report, screenshots
-sql/              DuckDB SQL scripts
-src/              Python modules
-orchestration/    Prefect flows
-```
+- Batch CSV source: `events.csv`, `item_properties_part1.csv`, and `category_tree.csv`.
+- REST API source: teammate-hosted item property delta endpoint.
+- Mock API fallback: reproducible local mode that uses deterministic sample records with cursor state.
+- API default batch size: 50 records per run; real API mode sends `count=<page_size>` and the server returns non-repeated rows.
 
-# 4. Dataset Summary
+### 2.1 External Source Summary
+| dataset_name          | file_path                                            |   file_size_mb |     row_count |   distinct_visitors |   distinct_items |   distinct_properties |   distinct_categories |   distinct_parent_categories |   root_category_rows |   rows_with_transaction_id |   rows_without_transaction_id |   null_value_rows |   min_timestamp_ms |   max_timestamp_ms | min_timestamp_datetime     | max_timestamp_datetime     |
+|:----------------------|:-----------------------------------------------------|---------------:|--------------:|--------------------:|-----------------:|----------------------:|----------------------:|-----------------------------:|---------------------:|---------------------------:|------------------------------:|------------------:|-------------------:|-------------------:|:---------------------------|:---------------------------|
+| events                | data/external/retailrocket/events.csv                |         89.872 |    2.7561e+06 |         1.40758e+06 |           235061 |                   nan |                   nan |                          nan |                  nan |                      22457 |                   2.73364e+06 |               nan |        1.43062e+12 |        1.44255e+12 | 2015-05-03T03:00:04.384000 | 2015-09-18T02:59:47.788000 |
+| item_properties_part1 | data/external/retailrocket/item_properties_part1.csv |        461.879 |    1.1e+07    |       nan           |           417053 |                  1097 |                   nan |                          nan |                  nan |                        nan |                 nan           |                 0 |        1.43123e+12 |        1.44211e+12 | 2015-05-10T03:00:00        | 2015-09-13T03:00:00        |
+| category_tree         | data/external/retailrocket/category_tree.csv         |          0.014 | 1669          |       nan           |              nan |                   nan |                  1669 |                          362 |                   25 |                        nan |                 nan           |               nan |      nan           |      nan           | nan                        | nan                        |
 
-## 4.1 DummyJSON Raw Summary
-| file_path                                                                                    | file_name                     | top_level_keys               | list_key   |   record_count |
-|:---------------------------------------------------------------------------------------------|:------------------------------|:-----------------------------|:-----------|---------------:|
-| data/raw/source=dummyjson/type=carts/ingest_date=2026-04-20/carts_20260420_224802.json       | carts_20260420_224802.json    | carts, total, skip, limit    | carts      |            100 |
-| data/raw/source=dummyjson/type=carts/ingest_date=2026-04-21/carts_20260421_031642.json       | carts_20260421_031642.json    | carts, total, skip, limit    | carts      |            100 |
-| data/raw/source=dummyjson/type=carts/ingest_date=2026-04-22/carts_20260422_002638.json       | carts_20260422_002638.json    | carts, total, skip, limit    | carts      |            100 |
-| data/raw/source=dummyjson/type=carts/ingest_date=2026-04-22/carts_20260422_020241.json       | carts_20260422_020241.json    | carts, total, skip, limit    | carts      |            100 |
-| data/raw/source=dummyjson/type=products/ingest_date=2026-04-20/products_20260420_224800.json | products_20260420_224800.json | products, total, skip, limit | products   |            100 |
-| data/raw/source=dummyjson/type=products/ingest_date=2026-04-21/products_20260421_031640.json | products_20260421_031640.json | products, total, skip, limit | products   |            100 |
-| data/raw/source=dummyjson/type=products/ingest_date=2026-04-22/products_20260422_002636.json | products_20260422_002636.json | products, total, skip, limit | products   |            100 |
-| data/raw/source=dummyjson/type=products/ingest_date=2026-04-22/products_20260422_020238.json | products_20260422_020238.json | products, total, skip, limit | products   |            100 |
-| data/raw/source=dummyjson/type=users/ingest_date=2026-04-20/users_20260420_224801.json       | users_20260420_224801.json    | users, total, skip, limit    | users      |            100 |
-| data/raw/source=dummyjson/type=users/ingest_date=2026-04-21/users_20260421_031641.json       | users_20260421_031641.json    | users, total, skip, limit    | users      |            100 |
-| data/raw/source=dummyjson/type=users/ingest_date=2026-04-22/users_20260422_002637.json       | users_20260422_002637.json    | users, total, skip, limit    | users      |            100 |
-| data/raw/source=dummyjson/type=users/ingest_date=2026-04-22/users_20260422_020240.json       | users_20260422_020240.json    | users, total, skip, limit    | users      |            100 |
-
-## 4.2 Retailrocket External Summary
-| dataset_name             | file_path                                                                                                  |   file_size_mb |      row_count |   distinct_visitors |   distinct_items |   distinct_properties |   distinct_categories |   distinct_parent_categories |   root_category_rows |   rows_with_transaction_id |   rows_without_transaction_id |   null_value_rows |   min_timestamp_ms |   max_timestamp_ms | min_timestamp_datetime     | max_timestamp_datetime     |
-|:-------------------------|:-----------------------------------------------------------------------------------------------------------|---------------:|---------------:|--------------------:|-----------------:|----------------------:|----------------------:|-----------------------------:|---------------------:|---------------------------:|------------------------------:|------------------:|-------------------:|-------------------:|:---------------------------|:---------------------------|
-| events                   | data/external/retailrocket/events.csv                                                                      |         89.872 |    2.7561e+06  |         1.40758e+06 |           235061 |                   nan |                   nan |                          nan |                  nan |                      22457 |                   2.73364e+06 |               nan |        1.43062e+12 |        1.44255e+12 | 2015-05-03T03:00:04.384000 | 2015-09-18T02:59:47.788000 |
-| item_properties_combined | data/external/retailrocket/item_properties_part1.csv; data/external/retailrocket/item_properties_part2.csv |        851.865 |    2.02759e+07 |       nan           |           417053 |                  1104 |                   nan |                          nan |                  nan |                        nan |                 nan           |                 0 |        1.43123e+12 |        1.44211e+12 | 2015-05-10T03:00:00        | 2015-09-13T03:00:00        |
-| category_tree            | data/external/retailrocket/category_tree.csv                                                               |          0.014 | 1669           |       nan           |              nan |                   nan |                  1669 |                          362 |                   25 |                        nan |                 nan           |               nan |      nan           |      nan           | nan                        | nan                        |
-
-## 4.3 Retailrocket Event Distribution
+### 2.2 Event Distribution
 | event       |   row_count |   distinct_visitors |   distinct_items |   rows_with_transaction_id |
 |:------------|------------:|--------------------:|-----------------:|---------------------------:|
 | view        |     2664312 |             1404179 |           234838 |                          0 |
 | addtocart   |       69332 |               37722 |            23903 |                          0 |
 | transaction |       22457 |               11719 |            12025 |                      22457 |
 
-# 5. Pipeline Architecture
+## 3. Batch and REST/Mock API Ingestion
+Batch ingestion copies the Retailrocket CSV source files from `data/external/retailrocket/` into immutable raw snapshots. API ingestion fetches item property delta records from a configurable teammate-hosted REST endpoint or the local mock mode used for reproducible assignment runs. The real API contract returns `data`, `success`, `count`, `total_rows`, and `unread_rows`; the mock contract returns `records`, `next_cursor`, and `has_more`. Both contracts are normalized to the same raw schema.
+
+API environment variables:
+
 ```text
-Raw/API/External Data
-  → Inspection
-  → Validation
-  → Staged Parquet
-  → DuckDB Warehouse
-  → Feature Tables
-  → Model Training + MLflow
-  → Model Artifacts + DVC
-  → Inference Demo
-  → Prefect Orchestration
+RECOMART_CATALOG_API_BASE_URL
+RECOMART_CATALOG_API_ENDPOINT
+RECOMART_CATALOG_API_TIMEOUT_SEC
+RECOMART_CATALOG_API_PAGE_SIZE
+RECOMART_CATALOG_API_AUTH_TOKEN
+RECOMART_CATALOG_API_STATE_FILE
+RECOMART_CATALOG_API_MOCK_MODE
 ```
 
-# 6. Data Quality Validation
+Default real API command:
 
-## 6.1 DummyJSON Validation Summary
+```bash
+python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Mock fallback command:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Real API mode command:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=false \
+RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \
+RECOMART_CATALOG_API_ENDPOINT="/items" \
+RECOMART_CATALOG_API_PAGE_SIZE=50 \
+python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+The default runtime configuration uses the teammate-hosted endpoint `https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items` with `count=<RECOMART_CATALOG_API_PAGE_SIZE>`. The API serves new rows without repetition.
+
+## 4. Raw Data Lake Layout
+Raw data uses one timestamp partition field:
+
+```text
+data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+Implemented raw snapshot paths:
+
+```text
+data/raw/source=retailrocket_batch/type=events/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_batch/type=item_properties_part1/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_batch/type=category_tree/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=<YYYYMMDD_HHMMSS>/
+```
+
+## 5. Data Validation Summary
+### 5.1 Raw Validation
 | status   |   check_count |
 |:---------|--------------:|
-| PASS     |            46 |
-| WARN     |             1 |
+| PASS     |            99 |
 
-## 6.2 Retailrocket Validation Summary
+### 5.2 Staged and Curated Validation
 | status   |   check_count |
 |:---------|--------------:|
-| PASS     |            36 |
-Retailrocket validation checks include file existence, required columns, row counts, valid event types, transaction ID consistency, category metadata coverage, availability metadata coverage, and uniqueness of latest item metadata records.
+| PASS     |            59 |
+| WARN     |             3 |
 
-# 7. DuckDB Warehouse
-DuckDB is used as a local analytical warehouse. Staged Parquet files are loaded into structured tables and transformed into mart-level recommendation tables.
-| schema_name   | relation_name                         | relation_type   |   row_count |   column_count | status   |
-|:--------------|:--------------------------------------|:----------------|------------:|---------------:|:---------|
-| staged        | retailrocket_events                   | BASE TABLE      |     2756101 |              8 | PASS     |
-| staged        | retailrocket_category_tree            | BASE TABLE      |        1669 |              5 | PASS     |
-| staged        | retailrocket_item_properties_selected | BASE TABLE      |     2291853 |              7 | PASS     |
-| staged        | retailrocket_item_category_latest     | BASE TABLE      |      417053 |              6 | PASS     |
-| staged        | retailrocket_item_availability_latest | BASE TABLE      |      417053 |              7 | PASS     |
-| mart          | retailrocket_interactions             | VIEW            |     2756101 |              9 | PASS     |
-| mart          | retailrocket_user_item_interactions   | BASE TABLE      |     2145179 |             14 | PASS     |
-| mart          | retailrocket_user_features            | BASE TABLE      |     1407580 |             12 | PASS     |
-| mart          | retailrocket_item_features            | BASE TABLE      |      235061 |             18 | PASS     |
+Validation checks cover file presence, schema, row counts, nulls, duplicates, event type validity, timestamp validity, API delta presence, latest metadata uniqueness, and referential coverage between interactions and metadata. The current reports show no failing validation checks.
 
-# 8. Feature Engineering
+Warning-level checks are documented and do not block the pipeline. Current warnings are related to duplicate event groups and item metadata coverage for category and availability fields:
 
-## 8.1 DummyJSON Feature Summary
-| schema_name   | table_name                     | relation_type   | output_file                                                 |   row_count |   column_count | output_exists   | status   |   missing_catalog_metadata_interactions |
-|:--------------|:-------------------------------|:----------------|:------------------------------------------------------------|------------:|---------------:|:----------------|:---------|----------------------------------------:|
-| features      | dummyjson_user_features        | BASE TABLE      | data/features/source=dummyjson/user_features.parquet        |         100 |             14 | True            | PASS     |                                     nan |
-| features      | dummyjson_item_features        | BASE TABLE      | data/features/source=dummyjson/item_features.parquet        |         100 |             21 | True            | PASS     |                                     nan |
-| features      | dummyjson_interaction_features | BASE TABLE      | data/features/source=dummyjson/interaction_features.parquet |         378 |             16 | True            | PASS     |                                     183 |
+| dataset_name         | check_name                    | status   | details                     |
+|:---------------------|:------------------------------|:---------|:----------------------------|
+| events               | duplicate_event_rows          | WARN     | Duplicate event groups: 458 |
+| referential_coverage | event_items_with_category     | WARN     | 102390/235061 (0.4356)      |
+| referential_coverage | event_items_with_availability | WARN     | 108603/235061 (0.4620)      |
 
-## 8.2 Retailrocket Feature Summary
+## 6. Preparation, Staged Layer, and Curated Layer
+Preparation reads from `data/raw/`, uses latest batch partitions for batch source types, and reads all API delta partitions so metadata deltas accumulate across runs. Staged outputs are typed Parquet files; curated outputs are EDA/modeling-ready analytical datasets.
+
+### 6.1 Staged Preparation Summary
+| dataset_name              | output_file                                                       | description                                                                   | source_files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |   row_count |   column_count |   file_size_mb | status   |   api_delta_partition_count |   api_delta_raw_rows |   api_delta_rows_after_deduplication | api_delta_deduplication_key             |
+|:--------------------------|:------------------------------------------------------------------|:------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------:|---------------:|---------------:|:---------|----------------------------:|---------------------:|-------------------------------------:|:----------------------------------------|
+| events                    | data/staged/source=retailrocket/events.parquet                    | Retailrocket visitor-item events prepared from raw batch ingestion.           | data/raw/source=retailrocket_batch/type=events/ingestion_timestamp=20260428_232221/events.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |     2756101 |              8 |         54.964 | PASS     |                         nan |                  nan |                                  nan | nan                                     |
+| category_tree             | data/staged/source=retailrocket/category_tree.parquet             | Retailrocket category hierarchy prepared from raw batch ingestion.            | data/raw/source=retailrocket_batch/type=category_tree/ingestion_timestamp=20260428_232221/category_tree.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |        1669 |              5 |          0.012 | PASS     |                         nan |                  nan |                                  nan | nan                                     |
+| item_properties_batch     | data/staged/source=retailrocket/item_properties_batch.parquet     | Selected Retailrocket batch item properties from raw item_properties_part1.   | data/raw/source=retailrocket_batch/type=item_properties_part1/ingestion_timestamp=20260428_232221/item_properties_part1.csv                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |     1243692 |              8 |          8.857 | PASS     |                         nan |                  nan |                                  nan | nan                                     |
+| item_properties_api_delta | data/staged/source=retailrocket/item_properties_api_delta.parquet | Retailrocket item property delta records from all REST/mock API raw landings. | data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260426_230121/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260426_230542/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_180102/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_180548/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_234351/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260427_235803/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_222649/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_223935/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_224313/item_properties_delta.parquet; data/raw/source=retailrocket_api/type=item_properties_delta/ingestion_timestamp=20260428_232229/item_properties_delta.parquet |         260 |              9 |          0.007 | PASS     |                          10 |                  260 |                                  260 | none - all API delta rows are preserved |
+| item_properties_combined  | data/staged/source=retailrocket/item_properties_combined.parquet  | Combined batch and API delta item properties.                                 | nan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |     1243952 |              9 |          8.864 | PASS     |                         nan |                  nan |                                  nan | nan                                     |
+| item_category_latest      | data/staged/source=retailrocket/item_category_latest.parquet      | Latest categoryid value per item from combined item properties.               | nan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |      229346 |              6 |          1.499 | PASS     |                         nan |                  nan |                                  nan | nan                                     |
+| item_availability_latest  | data/staged/source=retailrocket/item_availability_latest.parquet  | Latest availability value per item from combined item properties.             | nan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |      236885 |              7 |          1.295 | PASS     |                         nan |                  nan |                                  nan | nan                                     |
+
+### 6.2 Curated Dataset Summary
+| dataset_name                   | output_file                                                             | description                                                                 |   source_files |   row_count |   column_count |   file_size_mb | status   |
+|:-------------------------------|:------------------------------------------------------------------------|:----------------------------------------------------------------------------|---------------:|------------:|---------------:|---------------:|:---------|
+| curated_interactions           | data/curated/source=retailrocket/curated_interactions.parquet           | EDA-ready Retailrocket interaction rows enriched with latest item metadata. |            nan |     2756101 |             13 |         60.749 | PASS     |
+| curated_items                  | data/curated/source=retailrocket/curated_items.parquet                  | EDA-ready Retailrocket item dataset with event aggregates and metadata.     |            nan |      235061 |             16 |          8.527 | PASS     |
+| curated_user_item_interactions | data/curated/source=retailrocket/curated_user_item_interactions.parquet | EDA/modeling-ready user-item interaction aggregates.                        |            nan |     2145179 |             19 |         80.793 | PASS     |
+
+## 7. EDA Plots
+Generated EDA/model evidence plots are stored under `reports/plots/`:
+
+- `retailrocket_event_distribution.png`
+- `retailrocket_top_items.png`
+- `retailrocket_user_activity_distribution.png`
+- `retailrocket_model_metrics.png`
+- `retailrocket_model_comparison_metrics.png`
+
+## 8. SQL Transformation and Warehouse
+DuckDB stores Retailrocket staged, curated, mart, and feature schemas in `data/warehouse/recomart.duckdb`. The DuckDB binary is generated locally and is not committed directly to Git.
+
+### 8.1 DuckDB Load Summary
+| schema_name   | relation_name                          | relation_type   |   row_count |   column_count | status   |
+|:--------------|:---------------------------------------|:----------------|------------:|---------------:|:---------|
+| staged        | retailrocket_events                    | BASE TABLE      |     2756101 |              8 | PASS     |
+| staged        | retailrocket_category_tree             | BASE TABLE      |        1669 |              5 | PASS     |
+| staged        | retailrocket_item_properties_batch     | BASE TABLE      |     1243692 |              8 | PASS     |
+| staged        | retailrocket_item_properties_api_delta | BASE TABLE      |         260 |              9 | PASS     |
+| staged        | retailrocket_item_properties_combined  | BASE TABLE      |     1243952 |              9 | PASS     |
+| staged        | retailrocket_item_category_latest      | BASE TABLE      |      229346 |              6 | PASS     |
+| staged        | retailrocket_item_availability_latest  | BASE TABLE      |      236885 |              7 | PASS     |
+| curated       | retailrocket_interactions              | BASE TABLE      |     2756101 |             13 | PASS     |
+| curated       | retailrocket_items                     | BASE TABLE      |      235061 |             16 | PASS     |
+| curated       | retailrocket_user_item_interactions    | BASE TABLE      |     2145179 |             19 | PASS     |
+| mart          | retailrocket_interactions              | VIEW            |     2756101 |             13 | PASS     |
+| mart          | retailrocket_user_item_interactions    | BASE TABLE      |     2145179 |             19 | PASS     |
+| mart          | retailrocket_user_features             | BASE TABLE      |     1407580 |             12 | PASS     |
+| mart          | retailrocket_item_features             | BASE TABLE      |      235061 |             18 | PASS     |
+
+### 8.2 SQL Schema Sample
+| schema_name   | table_name                | column_name               |   ordinal_position | data_type                | is_nullable   |
+|:--------------|:--------------------------|:--------------------------|-------------------:|:-------------------------|:--------------|
+| curated       | retailrocket_interactions | user_id                   |                  1 | BIGINT                   | YES           |
+| curated       | retailrocket_interactions | item_id                   |                  2 | BIGINT                   | YES           |
+| curated       | retailrocket_interactions | event_type                |                  3 | VARCHAR                  | YES           |
+| curated       | retailrocket_interactions | event_timestamp_ms        |                  4 | BIGINT                   | YES           |
+| curated       | retailrocket_interactions | event_datetime            |                  5 | TIMESTAMP WITH TIME ZONE | YES           |
+| curated       | retailrocket_interactions | transaction_id            |                  6 | BIGINT                   | YES           |
+| curated       | retailrocket_interactions | interaction_weight        |                  7 | DECIMAL(2,1)             | YES           |
+| curated       | retailrocket_interactions | category_id               |                  8 | BIGINT                   | YES           |
+| curated       | retailrocket_interactions | parent_category_id        |                  9 | BIGINT                   | YES           |
+| curated       | retailrocket_interactions | is_available              |                 10 | INTEGER                  | YES           |
+| curated       | retailrocket_interactions | available_raw_value       |                 11 | VARCHAR                  | YES           |
+| curated       | retailrocket_interactions | has_category_metadata     |                 12 | INTEGER                  | YES           |
+| curated       | retailrocket_interactions | has_availability_metadata |                 13 | INTEGER                  | YES           |
+| curated       | retailrocket_items        | item_id                   |                  1 | BIGINT                   | YES           |
+| curated       | retailrocket_items        | total_events              |                  2 | BIGINT                   | YES           |
+| curated       | retailrocket_items        | unique_users              |                  3 | BIGINT                   | YES           |
+| curated       | retailrocket_items        | view_events               |                  4 | DOUBLE                   | YES           |
+| curated       | retailrocket_items        | addtocart_events          |                  5 | DOUBLE                   | YES           |
+| curated       | retailrocket_items        | transaction_events        |                  6 | DOUBLE                   | YES           |
+| curated       | retailrocket_items        | first_event_timestamp_ms  |                  7 | BIGINT                   | YES           |
+| curated       | retailrocket_items        | last_event_timestamp_ms   |                  8 | BIGINT                   | YES           |
+| curated       | retailrocket_items        | first_event_datetime      |                  9 | TIMESTAMP WITH TIME ZONE | YES           |
+| curated       | retailrocket_items        | last_event_datetime       |                 10 | TIMESTAMP WITH TIME ZONE | YES           |
+| curated       | retailrocket_items        | category_id               |                 11 | BIGINT                   | YES           |
+| curated       | retailrocket_items        | parent_category_id        |                 12 | BIGINT                   | YES           |
+
+## 9. Feature Engineering
+Feature tables are generated under `data/features/source=retailrocket/`.
+
+### 9.1 Feature Output Summary
 | schema_name   | table_name                      | output_file                                                  |   row_count |   column_count |   file_size_mb | status   |
 |:--------------|:--------------------------------|:-------------------------------------------------------------|------------:|---------------:|---------------:|:---------|
-| features      | retailrocket_user_features      | data/features/source=retailrocket/user_features.parquet      |     1407580 |             16 |         47.328 | PASS     |
-| features      | retailrocket_item_features      | data/features/source=retailrocket/item_features.parquet      |      235061 |             21 |          9.557 | PASS     |
-| features      | retailrocket_user_item_features | data/features/source=retailrocket/user_item_features.parquet |     2145179 |             24 |         83.627 | PASS     |
-Retailrocket features include user-level behavior, item-level popularity and metadata, and user-item interaction features such as event counts, implicit labels, and strongest event type.
+| features      | retailrocket_user_features      | data/features/source=retailrocket/user_features.parquet      |     1407580 |             16 |         47.362 | PASS     |
+| features      | retailrocket_item_features      | data/features/source=retailrocket/item_features.parquet      |      235061 |             21 |          9.043 | PASS     |
+| features      | retailrocket_user_item_features | data/features/source=retailrocket/user_item_features.parquet |     2145179 |             24 |         81.499 | PASS     |
 
-# 9. Feature Registry
-A custom feature registry was implemented for DummyJSON to demonstrate feature store concepts. It maps entities, feature views, source Parquet paths, and intended use cases such as training, batch inference, and candidate filtering.
+### 9.2 Feature Logic Summary
+| feature_group                   | feature_or_group                                           | source                                                                      | logic                                                                                                    | used_for                                                   |
+|:--------------------------------|:-----------------------------------------------------------|:----------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------|
+| retailrocket_user_features      | total_events                                               | mart.retailrocket_interactions                                              | Count all events generated by each user.                                                                 | User activity representation, training, inference analysis |
+| retailrocket_user_features      | unique_items                                               | mart.retailrocket_interactions                                              | Count distinct items interacted with by each user.                                                       | User diversity and activity profiling                      |
+| retailrocket_user_features      | view_events, addtocart_events, transaction_events          | mart.retailrocket_interactions                                              | Conditional event counts by user and event type.                                                         | Intent-strength measurement                                |
+| retailrocket_user_features      | addtocart_event_rate, transaction_event_rate               | features.retailrocket_user_features                                         | Event-type count divided by total user event count.                                                      | User conversion tendency                                   |
+| retailrocket_item_features      | total_events, unique_users                                 | mart.retailrocket_interactions                                              | Count total item interactions and distinct users per item.                                               | Item popularity and candidate ranking                      |
+| retailrocket_item_features      | category_id, parent_category_id                            | staged.retailrocket_item_category_latest, staged.retailrocket_category_tree | Attach latest item category and parent category metadata.                                                | Content-aware filtering and catalog analysis               |
+| retailrocket_item_features      | is_available                                               | staged.retailrocket_item_availability_latest                                | Attach latest availability flag for each item.                                                           | Candidate filtering and item metadata enrichment           |
+| retailrocket_item_features      | addtocart_rate, transaction_rate, cart_to_transaction_rate | features.retailrocket_item_features                                         | Conversion ratios derived from item-level event counts.                                                  | Ranking and item quality signals                           |
+| retailrocket_user_item_features | view_count, addtocart_count, transaction_count             | mart.retailrocket_user_item_interactions                                    | Aggregate user-item event counts by event type.                                                          | Implicit feedback model training                           |
+| retailrocket_user_item_features | implicit_label                                             | features.retailrocket_user_item_features                                    | Encode interaction strength: view < addtocart < transaction.                                             | Recommendation target signal                               |
+| retailrocket_user_item_features | strongest_event_type                                       | features.retailrocket_user_item_features                                    | Select strongest observed user-item event type.                                                          | Interpretability and behavioral analysis                   |
+| retailrocket_feature_registry   | user, item, user-item feature views                        | configs/feature_store/retailrocket_feature_registry.json                    | Custom registry maps Retailrocket feature views to entities, source paths, versions, and intended usage. | Feature store demonstration                                |
 
-# 10. Model Training
+## 10. Feature Store Registry and Retrieval Demo
+The custom Retailrocket feature registry documents feature views, entity keys, source paths, data types, feature roles, usage, and source transformations. The retrieval demo reads current feature parquet files and writes representative user, item, and user-item samples.
 
-## 10.1 DummyJSON Popularity Baseline
-| model_name             | model_type                 |   top_k |   total_interactions |   train_interactions |   test_interactions |   unique_users |   unique_items_in_interactions |   catalog_items |   recommended_item_count |   recommended_catalog_item_count |   catalog_item_coverage |   interaction_item_coverage |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |
-|:-----------------------|:---------------------------|--------:|---------------------:|---------------------:|--------------------:|---------------:|-------------------------------:|----------------:|-------------------------:|---------------------------------:|------------------------:|----------------------------:|------------------:|-------:|-----------------:|------------------:|---------------:|
-| popularity_recommender | global_popularity_baseline |      10 |                  378 |                  278 |                 100 |            100 |                            171 |             100 |                      150 |                               80 |                     0.8 |                    0.877193 |               100 |      2 |             0.02 |             0.002 |           0.02 |
+### 10.1 Feature Metadata Documentation Sample
+| registry_name                                | registry_version   | feature_view_name          | feature_view_version   | entity_keys   | source_path                                             | source_table                        | source_exists   | column_name              | data_type             | feature_role   | transformation                                                                                                                                  | used_for                                            | created_by                    | description                                                                     |
+|:---------------------------------------------|:-------------------|:---------------------------|:-----------------------|:--------------|:--------------------------------------------------------|:------------------------------------|:----------------|:-------------------------|:----------------------|:---------------|:------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------|:------------------------------|:--------------------------------------------------------------------------------|
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | user_id                  | int64                 | entity_key     | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | total_events             | int64                 | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | unique_items             | int64                 | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | view_events              | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | addtocart_events         | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | transaction_events       | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | total_interaction_score  | decimal128(38, 1)     | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | avg_interaction_weight   | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | first_event_timestamp_ms | int64                 | metadata       | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | last_event_timestamp_ms  | int64                 | metadata       | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | first_event_datetime     | timestamp[us, tz=UTC] | metadata       | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | last_event_datetime      | timestamp[us, tz=UTC] | metadata       | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | active_days              | int64                 | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | addtocart_event_rate     | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | transaction_event_rate   | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_user_features | v1                     | ["user_id"]   | data/features/source=retailrocket/user_features.parquet | features.retailrocket_user_features | True            | events_per_unique_item   | double                | feature        | Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features. | training, inference, profiling                      | sql/retailrocket_features.sql | User-level behavioral features for Retailrocket visitors.                       |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_item_features | v1                     | ["item_id"]   | data/features/source=retailrocket/item_features.parquet | features.retailrocket_item_features | True            | item_id                  | int64                 | entity_key     | Aggregates Retailrocket item interactions and joins latest category and availability metadata from mart.retailrocket_item_features.             | training, inference, profiling, candidate filtering | sql/retailrocket_features.sql | Item-level popularity, conversion, and metadata features for candidate ranking. |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_item_features | v1                     | ["item_id"]   | data/features/source=retailrocket/item_features.parquet | features.retailrocket_item_features | True            | total_events             | int64                 | feature        | Aggregates Retailrocket item interactions and joins latest category and availability metadata from mart.retailrocket_item_features.             | training, inference, profiling, candidate filtering | sql/retailrocket_features.sql | Item-level popularity, conversion, and metadata features for candidate ranking. |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_item_features | v1                     | ["item_id"]   | data/features/source=retailrocket/item_features.parquet | features.retailrocket_item_features | True            | unique_users             | int64                 | feature        | Aggregates Retailrocket item interactions and joins latest category and availability metadata from mart.retailrocket_item_features.             | training, inference, profiling, candidate filtering | sql/retailrocket_features.sql | Item-level popularity, conversion, and metadata features for candidate ranking. |
+| retailrocket_recommendation_feature_registry | v1                 | retailrocket_item_features | v1                     | ["item_id"]   | data/features/source=retailrocket/item_features.parquet | features.retailrocket_item_features | True            | view_events              | double                | feature        | Aggregates Retailrocket item interactions and joins latest category and availability metadata from mart.retailrocket_item_features.             | training, inference, profiling, candidate filtering | sql/retailrocket_features.sql | Item-level popularity, conversion, and metadata features for candidate ranking. |
 
-## 10.2 Retailrocket Popularity Baseline
+### 10.2 Feature Retrieval Demo
+| retrieval_type     | feature_view_name               | feature_view_version   | entity_filter                  |   rows_returned |   columns_returned | sample_values_json                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|:-------------------|:--------------------------------|:-----------------------|:-------------------------------|----------------:|-------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| user_features      | retailrocket_user_features      | v1                     | user_id=1369328                |               1 |                 16 | {"active_days": "41", "addtocart_event_rate": "0.004484304932735426", "addtocart_events": "1.0", "avg_interaction_weight": "1.0269058295964126", "events_per_unique_item": "37.166666666666664", "first_event_datetime": "2015-08-07 02:46:43.261000+00:00", "first_event_timestamp_ms": "1438915603261", "last_event_datetime": "2015-09-16 00:46:05.298000+00:00", "last_event_timestamp_ms": "1442364365298", "total_events": "223", "total_interaction_score": "229.0", "transaction_event_rate": "0.004484304932735426", "transaction_events": "1.0", "unique_items": "6", "user_id": "1369328", "view_events": "221.0"}                                                                                                                                                                                                                  |
+| item_features      | retailrocket_item_features      | v1                     | item_id=356339                 |               1 |                 21 | {"addtocart_events": "1.0", "addtocart_rate": "0.004545454545454545", "available_raw_value": "1", "avg_interaction_weight": "1.027027027027027", "cart_to_transaction_rate": "1.0", "category_id": "1035.0", "first_event_datetime": "2015-08-09 03:23:02.140000+00:00", "first_event_timestamp_ms": "1439090582140", "has_availability_metadata": "1", "has_category_metadata": "1", "is_available": "1.0", "item_id": "356339", "last_event_datetime": "2015-09-16 00:46:05.298000+00:00", "last_event_timestamp_ms": "1442364365298", "parent_category_id": "920.0", "total_events": "222", "total_interaction_score": "228.0", "transaction_events": "1.0", "transaction_rate": "0.004545454545454545", "unique_users": "6", "view_events": "220.0"}                                                                                       |
+| user_item_features | retailrocket_user_item_features | v1                     | user_id=1369328,item_id=356339 |               1 |                 24 | {"addtocart_count": "1.0", "category_id": "1035.0", "first_event_datetime": "2015-08-09 03:23:02.140000+00:00", "first_event_timestamp_ms": "1439090582140", "has_addtocart": "1", "has_availability_metadata": "1", "has_category_metadata": "1", "has_transaction": "1", "implicit_label": "5.0", "interaction_score": "220.0", "is_available": "1.0", "item_id": "356339", "last_event_datetime": "2015-09-16 00:46:05.298000+00:00", "last_event_timestamp_ms": "1442364365298", "max_event_weight": "5.0", "parent_category_id": "920.0", "strongest_event_type": "transaction", "total_events": "214", "transaction_count": "1.0", "user_id": "1369328", "user_item_addtocart_rate": "0.0047169811320754715", "user_item_cart_to_transaction_rate": "1.0", "user_item_transaction_rate": "0.0047169811320754715", "view_count": "212.0"} |
+
+## 11. DVC Versioning Workflow
+DVC tracks external data, raw snapshots, staged data, curated data, feature tables, and model artifacts. Git stores source code, lightweight reports, plots, and `.dvc` metadata.
+
+| pipeline_layer   | description                                         | dvc_file                               | tracked_path              | md5                                  |   size_bytes |   nfiles | versioning_tool   | tracked_in_git   |
+|:-----------------|:----------------------------------------------------|:---------------------------------------|:--------------------------|:-------------------------------------|-------------:|---------:|:------------------|:-----------------|
+| external_data    | Retailrocket original external CSV dataset          | data/external/retailrocket.dvc         | retailrocket              | a9cdd04c0b079c0a7becea06b1f4c684.dir |    578568116 |        3 | DVC               | True             |
+| raw_batch_data   | Retailrocket raw batch ingestion snapshots          | data/raw/source=retailrocket_batch.dvc | source=retailrocket_batch | 102bada8dce214fb6e395264e2dbf5d9.dir |   2892849190 |       30 | DVC               | True             |
+| raw_api_data     | Retailrocket raw REST API catalog delta snapshots   | data/raw/source=retailrocket_api.dvc   | source=retailrocket_api   | 47eee925eea8fdadca1e0ea6d94dc05d.dir |       146289 |       46 | DVC               | True             |
+| staged_data      | Retailrocket staged Parquet data                    | data/staged/source=retailrocket.dvc    | source=retailrocket       | bbaa458b201f83802593b7561ab28d66.dir |     79165589 |        7 | DVC               | True             |
+| curated_data     | Retailrocket curated analytical Parquet data        | data/curated/source=retailrocket.dvc   | source=retailrocket       | 3465a819e7ed61c2c1058fa750e6d74e.dir |    157299406 |        3 | DVC               | True             |
+| feature_data     | Retailrocket feature Parquet data                   | data/features/source=retailrocket.dvc  | source=retailrocket       | 0f135b7d2036a677afaeb07322fbedf6.dir |    144533617 |        3 | DVC               | True             |
+| model_artifact   | Retailrocket trained recommendation model artifacts | models/retailrocket.dvc                | retailrocket              | f2720ee47bea2d8c546f4dc91d7dbfa3.dir |      1226758 |        2 | DVC               | True             |
+
+## 12. Model Training and Evaluation
+### 12.1 Popularity Baseline
 | model_name                          | model_type                       |   top_k |   test_window_days |   evaluation_sample_users |   min_timestamp_ms |   max_timestamp_ms |   cutoff_timestamp_ms | min_event_datetime               | max_event_datetime               |   train_event_count |   test_event_count |   train_distinct_items |   model_saved_item_count |   model_item_coverage |   test_target_users |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 |
 |:------------------------------------|:---------------------------------|--------:|-------------------:|--------------------------:|-------------------:|-------------------:|----------------------:|:---------------------------------|:---------------------------------|--------------------:|-------------------:|-----------------------:|-------------------------:|----------------------:|--------------------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|
-| retailrocket_popularity_recommender | event_weighted_global_popularity |      10 |                 14 |                     10000 |      1430622004384 |      1442545187788 |         1441335587788 | 2015-05-03 08:30:04.384000+05:30 | 2015-09-18 08:29:47.788000+05:30 |             2509138 |             246963 |                 225427 |                     5000 |             0.0221801 |                3648 |              3648 |     49 |         0.013432 |         0.0013432 |       0.013432 |   0.00804606 |
+| retailrocket_popularity_recommender | event_weighted_global_popularity |      10 |                 14 |                     10000 |      1430622004384 |      1442545187788 |         1441335587788 | 2015-05-03 08:30:04.384000+05:30 | 2015-09-18 08:29:47.788000+05:30 |             2509138 |             246963 |                 225427 |                     5000 |             0.0221801 |                3648 |              3648 |     49 |         0.013432 |         0.0013432 |       0.013432 |   0.00762866 |
 
-## 10.3 Retailrocket Content-Based Recommender
+### 12.2 Content-Based Recommender
 | model_name                             | model_type                       |   top_k |   test_window_days |   evaluation_sample_users |   min_timestamp_ms |   max_timestamp_ms |   cutoff_timestamp_ms |   candidate_item_count |   test_target_users |   user_profile_count |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 |
 |:---------------------------------------|:---------------------------------|--------:|-------------------:|--------------------------:|-------------------:|-------------------:|----------------------:|-----------------------:|--------------------:|---------------------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|
-| retailrocket_content_based_recommender | category_content_based_filtering |      10 |                 14 |                     10000 |      1430622004384 |      1442545187788 |         1441335587788 |                   5000 |                3648 |                  517 |              3648 |     39 |        0.0106908 |        0.00106908 |      0.0106908 |   0.00429383 |
-The content-based recommender uses item category, parent category, availability metadata, conversion signals, and user category profiles to recommend items similar to a user's historical interests. This directly satisfies the assignment requirement for a content-based recommendation model.
+| retailrocket_content_based_recommender | category_content_based_filtering |      10 |                 14 |                     10000 |      1430622004384 |      1442545187788 |         1441335587788 |                   5000 |                3648 |                  517 |              3648 |     27 |       0.00740132 |       0.000740132 |     0.00740132 |   0.00281525 |
 
-## 10.4 Retailrocket Model Comparison
-| model_family               | model_name                             | model_type                       |   top_k |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 |
-|:---------------------------|:---------------------------------------|:---------------------------------|--------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|
-| global_popularity_baseline | retailrocket_popularity_recommender    | event_weighted_global_popularity |      10 |              3648 |     49 |        0.013432  |        0.0013432  |      0.013432  |   0.00804606 |
-| content_based_filtering    | retailrocket_content_based_recommender | category_content_based_filtering |      10 |              3648 |     39 |        0.0106908 |        0.00106908 |      0.0106908 |   0.00429383 |
-The Retailrocket modeling stage includes two models. The first is an event-weighted global popularity baseline. The second is a category/content-based recommender that builds user profiles from historical category interactions and ranks candidate items using category similarity, metadata, conversion rates, and popularity prior. Event weights are: `view = 1`, `addtocart = 3`, and `transaction = 5`.
+### 12.3 Model Comparison
+| model_family               | model_name                             | model_type                       |   top_k |   evaluated_users |   hits |   hit_rate_at_10 |   precision_at_10 |   recall_at_10 |   ndcg_at_10 | model_artifact_path                               | training_report_path                                    |
+|:---------------------------|:---------------------------------------|:---------------------------------|--------:|------------------:|-------:|-----------------:|------------------:|---------------:|-------------:|:--------------------------------------------------|:--------------------------------------------------------|
+| global_popularity_baseline | retailrocket_popularity_recommender    | event_weighted_global_popularity |      10 |              3648 |     49 |       0.013432   |       0.0013432   |     0.013432   |   0.00762866 | models/retailrocket/popularity_recommender.pkl    | reports/retailrocket_model_training_summary.csv         |
+| content_based_filtering    | retailrocket_content_based_recommender | category_content_based_filtering |      10 |              3648 |     27 |       0.00740132 |       0.000740132 |     0.00740132 |   0.00281525 | models/retailrocket/content_based_recommender.pkl | reports/retailrocket_content_model_training_summary.csv |
 
-# 11. Model Evaluation
-The Retailrocket popularity baseline evaluated 3648 users and achieved HitRate@10 = 0.013432, Precision@10 = 0.001343, Recall@10 = 0.013432, NDCG@10 = 0.008046.
-The Retailrocket content-based recommender evaluated 3648 users and achieved HitRate@10 = 0.010691, Precision@10 = 0.001069, Recall@10 = 0.010691, NDCG@10 = 0.004294.
-NDCG@10 is included because it measures ranking quality. A hit at rank 1 receives more credit than a hit at rank 10.
+## 13. MLflow Tracking Metadata
+Both Retailrocket models log to the MLflow experiment `retailrocket_recommendation_models`. The run records include model parameters, HitRate@10, Precision@10, Recall@10, NDCG@10, and report/model artifacts. MLflow screenshot evidence is stored under `reports/screenshots/`.
 
-# 12. MLflow Experiment Tracking
-MLflow was used to log model parameters, metrics, reports, and artifacts. Screenshots of the UI are stored in `reports/screenshots/`.
+## 14. Inference Demo
+| model_name                             | model_type                       |   requested_user_count |   top_k |   recommendation_rows |   distinct_recommended_items |   training_hit_rate_at_10 |   training_precision_at_10 |   training_recall_at_10 |   test_target_users | model_key     | model_artifact_path                               |   candidate_or_saved_item_count |   training_ndcg_at_10 |   train_event_count |   test_event_count |
+|:---------------------------------------|:---------------------------------|-----------------------:|--------:|----------------------:|-----------------------------:|--------------------------:|---------------------------:|------------------------:|--------------------:|:--------------|:--------------------------------------------------|--------------------------------:|----------------------:|--------------------:|-------------------:|
+| retailrocket_popularity_recommender    | event_weighted_global_popularity |                      5 |       5 |                    25 |                           18 |                0.013432   |                0.0013432   |              0.013432   |                3648 | popularity    | models/retailrocket/popularity_recommender.pkl    |                            5000 |            0.00762866 |         2.50914e+06 |             246963 |
+| retailrocket_content_based_recommender | category_content_based_filtering |                      5 |       5 |                    25 |                            7 |                0.00740132 |                0.000740132 |              0.00740132 |                3648 | content_based | models/retailrocket/content_based_recommender.pkl |                            5000 |            0.00281525 |       nan           |                nan |
 
-# 13. DVC Versioning
-DVC tracks external data, staged data, feature data, and model artifacts. This keeps Git lightweight while preserving reproducibility for large files.
+## 15. Prefect Orchestration Summary
+Prefect orchestrates the full local pipeline using command-based tasks. The summary records step order, step name, command, status, return code, timing, and stdout/stderr tails.
 
-# 14. Inference Demo
-| model_name                          | model_type                       |   requested_user_count |   top_k |   recommendation_rows |   distinct_recommended_items |   model_saved_item_count |   training_hit_rate_at_10 |   training_precision_at_10 |   training_recall_at_10 |   train_event_count |   test_event_count |   test_target_users |
-|:------------------------------------|:---------------------------------|-----------------------:|--------:|----------------------:|-----------------------------:|-------------------------:|--------------------------:|---------------------------:|------------------------:|--------------------:|-------------------:|--------------------:|
-| retailrocket_popularity_recommender | event_weighted_global_popularity |                      3 |       5 |                    15 |                            5 |                     5000 |                  0.013432 |                  0.0013432 |                0.013432 |             2509138 |             246963 |                3648 |
-The Retailrocket inference script loads the trained model and generates recommendations for default active users, a single user, or custom comma-separated users. Previously interacted items are filtered.
+|   step_order | step_name                                 | status   |   return_code |   duration_seconds |
+|-------------:|:------------------------------------------|:---------|--------------:|-------------------:|
+|            1 | inspect_retailrocket_external             | PASS     |             0 |              6.162 |
+|            2 | ingest_retailrocket_batch                 | PASS     |             0 |             23.525 |
+|            3 | ingest_retailrocket_catalog_api_delta     | PASS     |             0 |              2.691 |
+|            4 | validate_retailrocket_raw                 | PASS     |             0 |             13.203 |
+|            5 | prepare_retailrocket_staged_and_curated   | PASS     |             0 |              8.927 |
+|            6 | validate_retailrocket_staged_and_curated  | PASS     |             0 |              1.896 |
+|            7 | load_retailrocket_to_duckdb               | PASS     |             0 |             14.638 |
+|            8 | build_retailrocket_features               | PASS     |             0 |             11.76  |
+|            9 | retrieve_retailrocket_features            | PASS     |             0 |             13.266 |
+|           10 | train_retailrocket_popularity_recommender | PASS     |             0 |             58.73  |
+|           11 | train_retailrocket_content_recommender    | PASS     |             0 |             99.372 |
+|           12 | run_retailrocket_popularity_inference     | PASS     |             0 |              0.827 |
+|           13 | run_retailrocket_content_based_inference  | PASS     |             0 |              0.885 |
+|           14 | generate_model_comparison                 | PASS     |             0 |              1.696 |
+|           15 | generate_assignment_evidence              | PASS     |             0 |              2.043 |
+|           16 | generate_final_report                     | PASS     |             0 |              0.619 |
+|           17 | generate_assignment_pdf                   | PASS     |             0 |              2.341 |
 
-# 15. Orchestration
+## 16. API Ingestion 30-Minute Schedule
+The API-only Prefect flow can be deployed on a 30-minute interval with Prefect 3:
 
-## 15.1 DummyJSON Prefect Flow
-|   step_order | step_name                    | status   |   duration_seconds |
-|-------------:|:-----------------------------|:---------|-------------------:|
-|            1 | ingest_dummyjson_api         | PASS     |              3.517 |
-|            2 | inspect_dummyjson_raw        | PASS     |              0.459 |
-|            3 | validate_dummyjson_raw       | PASS     |              0.374 |
-|            4 | prepare_dummyjson_staged     | PASS     |              0.457 |
-|            5 | validate_dummyjson_staged    | PASS     |              0.437 |
-|            6 | load_dummyjson_to_duckdb     | PASS     |              0.729 |
-|            7 | build_dummyjson_features     | PASS     |              0.46  |
-|            8 | retrieve_dummyjson_features  | PASS     |              0.425 |
-|            9 | train_popularity_recommender | PASS     |              2.759 |
-|           10 | run_popularity_inference     | PASS     |              0.399 |
+```bash
+prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \
+  --name retailrocket-api-every-30-minutes \
+  --interval 1800 \
+  --pool default-agent-pool
+```
 
-## 15.2 Retailrocket Prefect Flow
-|   step_order | step_name                                 | status   |   duration_seconds |
-|-------------:|:------------------------------------------|:---------|-------------------:|
-|            1 | inspect_retailrocket_external             | PASS     |              4.668 |
-|            2 | prepare_retailrocket_staged               | PASS     |              3.435 |
-|            3 | validate_retailrocket_staged              | PASS     |              0.643 |
-|            4 | load_retailrocket_to_duckdb               | PASS     |              5.156 |
-|            5 | build_retailrocket_features               | PASS     |              4.57  |
-|            6 | train_retailrocket_popularity_recommender | PASS     |             24.038 |
-|            7 | run_retailrocket_inference                | PASS     |              0.585 |
+## 17. Known Validation Warnings
+The current validation summary contains no failing checks. Warning-level checks are documented and do not block the pipeline. Current warnings, when present, are related to duplicate event groups and metadata coverage for category and availability fields.
 
-# 16. Reproducibility
-The project can be reproduced by activating the environment, checking DVC state, restoring artifacts if a DVC remote is configured, and running the Prefect orchestration scripts.
+| dataset_name         | check_name                    | status   | details                     |
+|:---------------------|:------------------------------|:---------|:----------------------------|
+| events               | duplicate_event_rows          | WARN     | Duplicate event groups: 458 |
+| referential_coverage | event_items_with_category     | WARN     | 102390/235061 (0.4356)      |
+| referential_coverage | event_items_with_availability | WARN     | 108603/235061 (0.4620)      |
 
-# 17. Team Work Division
-| Team Member | Responsibility |
-|---|---|
-| Member 1 | Data ingestion and inspection |
-| Member 2 | Data preparation, validation, and DVC tracking |
-| Member 3 | DuckDB warehouse and feature engineering |
-| Member 4 | MLflow, training, inference, orchestration, and final reporting |
+## 18. Reproducibility Steps
+```bash
+conda activate recomart
+dvc pull
+python -m orchestration.retailrocket_pipeline
+python -m src.reporting.generate_assignment_evidence
+python -m src.reporting.generate_model_comparison
+python -m src.reporting.generate_final_report
+python -m src.reporting.generate_assignment_pdf
+git status
+dvc status
+```
 
-
-# 18. Limitations and Future Work
-- Current Retailrocket models are lightweight popularity and content-based baselines
-- Add personalized collaborative filtering
-- Add matrix factorization or item-item recommendations
-- Add FastAPI serving endpoint
-- Add Streamlit monitoring dashboard
-- Add scheduled orchestration
-
-# 19. Conclusion
-The project successfully demonstrates a reproducible ML data management pipeline for recommendation systems using modern tools such as DuckDB, DVC, MLflow, and Prefect.
+## 19. Conclusion
+RecoMart implements the required data management pipeline stages for a recommendation system using Retailrocket batch data and a REST/mock API metadata feed. The repository contains source code, DVC metadata, validation and model reports, Prefect orchestration evidence, MLflow screenshot evidence, and the consolidated PDF report.

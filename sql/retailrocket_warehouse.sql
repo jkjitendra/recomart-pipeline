@@ -1,7 +1,13 @@
 -- Retailrocket DuckDB warehouse transformation.
--- Loads staged Retailrocket Parquet files and creates recommender mart tables.
+-- Loads staged and curated Retailrocket Parquet files and creates recommender mart tables.
+
+DROP SCHEMA IF EXISTS staged CASCADE;
+DROP SCHEMA IF EXISTS curated CASCADE;
+DROP SCHEMA IF EXISTS mart CASCADE;
+DROP SCHEMA IF EXISTS features CASCADE;
 
 CREATE SCHEMA IF NOT EXISTS staged;
+CREATE SCHEMA IF NOT EXISTS curated;
 CREATE SCHEMA IF NOT EXISTS mart;
 
 -- ---------------------------------------------------------------------
@@ -16,9 +22,17 @@ CREATE OR REPLACE TABLE staged.retailrocket_category_tree AS
 SELECT *
 FROM read_parquet('data/staged/source=retailrocket/category_tree.parquet', hive_partitioning = false);
 
-CREATE OR REPLACE TABLE staged.retailrocket_item_properties_selected AS
+CREATE OR REPLACE TABLE staged.retailrocket_item_properties_batch AS
 SELECT *
-FROM read_parquet('data/staged/source=retailrocket/item_properties_selected.parquet', hive_partitioning = false);
+FROM read_parquet('data/staged/source=retailrocket/item_properties_batch.parquet', hive_partitioning = false);
+
+CREATE OR REPLACE TABLE staged.retailrocket_item_properties_api_delta AS
+SELECT *
+FROM read_parquet('data/staged/source=retailrocket/item_properties_api_delta.parquet', hive_partitioning = false);
+
+CREATE OR REPLACE TABLE staged.retailrocket_item_properties_combined AS
+SELECT *
+FROM read_parquet('data/staged/source=retailrocket/item_properties_combined.parquet', hive_partitioning = false);
 
 CREATE OR REPLACE TABLE staged.retailrocket_item_category_latest AS
 SELECT *
@@ -29,61 +43,64 @@ SELECT *
 FROM read_parquet('data/staged/source=retailrocket/item_availability_latest.parquet', hive_partitioning = false);
 
 -- ---------------------------------------------------------------------
--- Interaction-level mart
+-- Curated tables
+-- ---------------------------------------------------------------------
+
+CREATE OR REPLACE TABLE curated.retailrocket_interactions AS
+SELECT *
+FROM read_parquet('data/curated/source=retailrocket/curated_interactions.parquet', hive_partitioning = false);
+
+CREATE OR REPLACE TABLE curated.retailrocket_items AS
+SELECT *
+FROM read_parquet('data/curated/source=retailrocket/curated_items.parquet', hive_partitioning = false);
+
+CREATE OR REPLACE TABLE curated.retailrocket_user_item_interactions AS
+SELECT *
+FROM read_parquet('data/curated/source=retailrocket/curated_user_item_interactions.parquet', hive_partitioning = false);
+
+-- ---------------------------------------------------------------------
+-- Mart views and tables
 -- ---------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW mart.retailrocket_interactions AS
 SELECT
-    visitor_id AS user_id,
+    user_id,
     item_id,
     event_type,
     event_timestamp_ms,
     event_datetime,
     transaction_id,
-    CASE
-        WHEN event_type = 'view' THEN 1.0
-        WHEN event_type = 'addtocart' THEN 3.0
-        WHEN event_type = 'transaction' THEN 5.0
-        ELSE 0.0
-    END AS interaction_weight,
-    _source_system,
-    _source_file
-FROM staged.retailrocket_events;
-
--- ---------------------------------------------------------------------
--- User-item aggregate mart
--- One row per user-item pair.
--- This becomes the core training table for recommendation models.
--- ---------------------------------------------------------------------
+    interaction_weight,
+    category_id,
+    parent_category_id,
+    is_available,
+    available_raw_value,
+    has_category_metadata,
+    has_availability_metadata
+FROM curated.retailrocket_interactions;
 
 CREATE OR REPLACE TABLE mart.retailrocket_user_item_interactions AS
 SELECT
     user_id,
     item_id,
-    COUNT(*) AS total_events,
-    SUM(CASE WHEN event_type = 'view' THEN 1 ELSE 0 END) AS view_count,
-    SUM(CASE WHEN event_type = 'addtocart' THEN 1 ELSE 0 END) AS addtocart_count,
-    SUM(CASE WHEN event_type = 'transaction' THEN 1 ELSE 0 END) AS transaction_count,
-    SUM(interaction_weight) AS interaction_score,
-    MAX(interaction_weight) AS max_event_weight,
-    MIN(event_timestamp_ms) AS first_event_timestamp_ms,
-    MAX(event_timestamp_ms) AS last_event_timestamp_ms,
-    MIN(event_datetime) AS first_event_datetime,
-    MAX(event_datetime) AS last_event_datetime,
-    CASE
-        WHEN SUM(CASE WHEN event_type = 'transaction' THEN 1 ELSE 0 END) > 0 THEN 1
-        ELSE 0
-    END AS has_transaction,
-    CASE
-        WHEN SUM(CASE WHEN event_type = 'addtocart' THEN 1 ELSE 0 END) > 0 THEN 1
-        ELSE 0
-    END AS has_addtocart
-FROM mart.retailrocket_interactions
-GROUP BY user_id, item_id;
-
--- ---------------------------------------------------------------------
--- User feature mart
--- ---------------------------------------------------------------------
+    total_events,
+    view_count,
+    addtocart_count,
+    transaction_count,
+    interaction_score,
+    max_event_weight,
+    first_event_timestamp_ms,
+    last_event_timestamp_ms,
+    first_event_datetime,
+    last_event_datetime,
+    category_id,
+    parent_category_id,
+    is_available,
+    has_category_metadata,
+    has_availability_metadata,
+    has_transaction,
+    has_addtocart
+FROM curated.retailrocket_user_item_interactions;
 
 CREATE OR REPLACE TABLE mart.retailrocket_user_features AS
 SELECT
@@ -102,57 +119,35 @@ SELECT
 FROM mart.retailrocket_interactions
 GROUP BY user_id;
 
--- ---------------------------------------------------------------------
--- Item feature mart
--- ---------------------------------------------------------------------
-
 CREATE OR REPLACE TABLE mart.retailrocket_item_features AS
-WITH item_event_agg AS (
-    SELECT
-        item_id,
-        COUNT(*) AS total_events,
-        COUNT(DISTINCT user_id) AS unique_users,
-        SUM(CASE WHEN event_type = 'view' THEN 1 ELSE 0 END) AS view_events,
-        SUM(CASE WHEN event_type = 'addtocart' THEN 1 ELSE 0 END) AS addtocart_events,
-        SUM(CASE WHEN event_type = 'transaction' THEN 1 ELSE 0 END) AS transaction_events,
-        SUM(interaction_weight) AS total_interaction_score,
-        AVG(interaction_weight) AS avg_interaction_weight,
-        MIN(event_timestamp_ms) AS first_event_timestamp_ms,
-        MAX(event_timestamp_ms) AS last_event_timestamp_ms,
-        MIN(event_datetime) AS first_event_datetime,
-        MAX(event_datetime) AS last_event_datetime
-    FROM mart.retailrocket_interactions
-    GROUP BY item_id
-)
 SELECT
-    item.item_id,
-    item.total_events,
-    item.unique_users,
-    item.view_events,
-    item.addtocart_events,
-    item.transaction_events,
-    item.total_interaction_score,
-    item.avg_interaction_weight,
-    item.first_event_timestamp_ms,
-    item.last_event_timestamp_ms,
-    item.first_event_datetime,
-    item.last_event_datetime,
-    category.category_id,
-    tree.parent_category_id,
-    availability.is_available,
-    availability.available_raw_value,
+    item_id,
+    total_events,
+    unique_users,
+    view_events,
+    addtocart_events,
+    transaction_events,
+    (
+        view_events * 1.0
+        + addtocart_events * 3.0
+        + transaction_events * 5.0
+    ) AS total_interaction_score,
     CASE
-        WHEN category.item_id IS NULL THEN 0
-        ELSE 1
-    END AS has_category_metadata,
-    CASE
-        WHEN availability.item_id IS NULL THEN 0
-        ELSE 1
-    END AS has_availability_metadata
-FROM item_event_agg item
-LEFT JOIN staged.retailrocket_item_category_latest category
-    ON item.item_id = category.item_id
-LEFT JOIN staged.retailrocket_category_tree tree
-    ON category.category_id = tree.category_id
-LEFT JOIN staged.retailrocket_item_availability_latest availability
-    ON item.item_id = availability.item_id;
+        WHEN total_events > 0 THEN (
+            view_events * 1.0
+            + addtocart_events * 3.0
+            + transaction_events * 5.0
+        ) / total_events
+        ELSE 0.0
+    END AS avg_interaction_weight,
+    first_event_timestamp_ms,
+    last_event_timestamp_ms,
+    first_event_datetime,
+    last_event_datetime,
+    category_id,
+    parent_category_id,
+    is_available,
+    available_raw_value,
+    has_category_metadata,
+    has_availability_metadata
+FROM curated.retailrocket_items;

@@ -1,0 +1,6 @@
+outs:
+- md5: 937196c6ede4aa664075106d3aba4d95.dir
+  size: 157359299
+  nfiles: 3
+  hash: md5
+  path: source=retailrocket

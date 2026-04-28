@@ -1,0 +1,6 @@
+outs:
+- md5: 9d62206afdbd9aca2be9e028465595a3.dir
+  size: 175365
+  nfiles: 51
+  hash: md5
+  path: source=retailrocket_api

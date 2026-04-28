@@ -1,0 +1,4 @@
+dataset_name,output_file,description,source_files,row_count,column_count,file_size_mb,status
+curated_interactions,data/curated/source=retailrocket/curated_interactions.parquet,EDA-ready Retailrocket interaction rows enriched with latest item metadata.,,2756101,13,60.749,PASS
+curated_items,data/curated/source=retailrocket/curated_items.parquet,EDA-ready Retailrocket item dataset with event aggregates and metadata.,,235061,16,8.527,PASS
+curated_user_item_interactions,data/curated/source=retailrocket/curated_user_item_interactions.parquet,EDA/modeling-ready user-item interaction aggregates.,,2145179,19,80.793,PASS

@@ -205,6 +205,21 @@ def df_to_table(
     return table
 
 
+def choose_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    if df.empty:
+        return df
+    return df[[column for column in columns if column in df.columns]]
+
+
+def validation_warning_details(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty or "status" not in df.columns:
+        return pd.DataFrame()
+    return choose_columns(
+        df[df["status"] == "WARN"].copy(),
+        ["dataset_name", "check_name", "status", "details"],
+    )
+
+
 def image_block(
     image_path: Path,
     caption: str,
@@ -247,15 +262,12 @@ def build_pdf() -> None:
     styles = make_styles()
     story: list = []
 
-    dummy_raw = read_csv("reports/dummyjson_raw_summary.csv")
-    dummy_validation = read_csv("reports/data_quality/dummyjson_staged_validation_report.csv")
-    dummy_features = read_csv("reports/dummyjson_feature_summary.csv")
-    dummy_training = read_csv("reports/model_training_summary.csv")
-    dummy_orchestration = read_csv("reports/orchestration_dummyjson_pipeline_summary.csv")
-
     retail_external = read_csv("reports/retailrocket_external_summary.csv")
     retail_events = read_csv("reports/retailrocket_event_type_summary.csv")
+    raw_validation = read_csv("reports/data_quality/retailrocket_raw_validation_report.csv")
     retail_validation = read_csv("reports/data_quality/retailrocket_staged_validation_report.csv")
+    preparation = read_csv("reports/retailrocket_preparation_summary.csv")
+    curated = read_csv("reports/retailrocket_curated_summary.csv")
     retail_warehouse = read_csv("reports/retailrocket_duckdb_load_summary.csv")
     retail_features = read_csv("reports/retailrocket_feature_summary.csv")
     retail_training = read_csv("reports/retailrocket_model_training_summary.csv")
@@ -272,7 +284,7 @@ def build_pdf() -> None:
     feature_retrieval = read_csv("reports/feature_store_retrieval_demo.csv")
 
     story.append(Spacer(1, 1.0 * inch))
-    story.append(Paragraph("RecoMart Recommendation Pipeline", styles["title"]))
+    story.append(Paragraph("RecoMart Retailrocket Recommendation Pipeline", styles["title"]))
     story.append(
         Paragraph(
             "Data Management for Machine Learning - Assignment I<br/>"
@@ -294,10 +306,10 @@ def build_pdf() -> None:
     section_title("1. Assignment Requirement Coverage", story, styles)
     coverage_rows = [
         ["Problem formulation", "Covered", "Business problem, objectives, outputs, metrics"],
-        ["Data collection and ingestion", "Covered", "DummyJSON API and Retailrocket CSV data"],
-        ["Raw data storage", "Covered", "Local data lake layout with source/type/date structure"],
-        ["Data profiling and validation", "Covered", "Automated validation scripts and reports"],
-        ["Data preparation and EDA", "Covered", "Prepared Parquet datasets and summary plots"],
+        ["Data collection and ingestion", "Covered", "Retailrocket batch CSV data and REST/mock catalog metadata delta source"],
+        ["Raw data storage", "Covered", "Partitioned data lake using source/type/ingestion_timestamp"],
+        ["Data profiling and validation", "Covered", "Raw, staged, and curated validation scripts and reports"],
+        ["Data preparation and EDA", "Covered", "Staged Parquet, curated datasets, and summary plots"],
         ["Feature engineering and transformation", "Covered", "DuckDB SQL warehouse and feature tables"],
         ["Feature store", "Covered", "Custom registry and retrieval demo"],
         ["Data versioning and lineage", "Covered", "DVC metadata and versioning workflow"],
@@ -331,11 +343,7 @@ def build_pdf() -> None:
     )
 
     section_title("3. Data Sources", story, styles)
-    subsection_title("3.1 DummyJSON API Source", story, styles)
-    story.append(paragraph("DummyJSON provides API-based products, users, and carts data for a small pipeline demo.", styles))
-    story.append(df_to_table(dummy_raw, styles, max_rows=8, max_cols=5))
-
-    subsection_title("3.2 Retailrocket External Dataset", story, styles)
+    subsection_title("3.1 Retailrocket External Dataset", story, styles)
     story.append(
         paragraph(
             "Retailrocket is the main large-scale dataset. It includes visitor-item events, item properties, "
@@ -350,19 +358,26 @@ def build_pdf() -> None:
     section_title("4. Ingestion, Raw Storage, and Logging", story, styles)
     story.append(
         paragraph(
-            "The ingestion layer includes API ingestion for DummyJSON and external batch ingestion for Retailrocket. "
-            "Data is stored in a structured local data lake. DummyJSON raw files are partitioned by source, type, "
-            "and ingest date. Retailrocket source data is tracked by DVC as an external dataset.",
+            "The ingestion layer contains Retailrocket batch ingestion and Retailrocket REST/mock "
+            "catalog metadata deltas. Retailrocket source data is tracked by DVC as an external dataset, and "
+            "raw ingestion snapshots are stored in a structured local data lake layout. The teammate-hosted real "
+            "API returns non-repeated rows using the data/success/count/total_rows/unread_rows contract, while "
+            "mock mode remains the reproducible local fallback using records/next_cursor/has_more.",
             styles,
         )
     )
     story.append(
         bullet_list(
             [
-                "DummyJSON ingestion script: src/ingestion/fetch_dummyjson.py",
                 "Retailrocket inspection script: src/ingestion/inspect_retailrocket_external.py",
-                "Ingestion log evidence: logs/ingestion_dummyjson.log",
-                "Raw storage layout: data/raw/source=dummyjson/type=*/ingest_date=*",
+                "Retailrocket batch ingestion script: src/ingestion/ingest_retailrocket_batch.py",
+                "Retailrocket API ingestion script: src/ingestion/ingest_retailrocket_catalog_api.py",
+                "Mock API server: src/ingestion/mock_retailrocket_catalog_api.py",
+                "Default API source: https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud/items.",
+                "API page size: RECOMART_CATALOG_API_PAGE_SIZE defaults to 50 and is sent as the count query parameter.",
+                "Raw layout: data/raw/source=<source_name>/type=<data_type>/ingestion_timestamp=<YYYYMMDD_HHMMSS>/",
+                "Raw batch source: data/raw/source=retailrocket_batch/",
+                "Raw API source: data/raw/source=retailrocket_api/",
                 "External storage layout: data/external/retailrocket",
             ],
             styles,
@@ -370,13 +385,13 @@ def build_pdf() -> None:
     )
 
     section_title("5. Data Validation and Quality Reports", story, styles)
-    subsection_title("5.1 DummyJSON Validation", story, styles)
-    if not dummy_validation.empty and "status" in dummy_validation.columns:
-        story.append(df_to_table(dummy_validation.groupby("status").size().reset_index(name="check_count"), styles))
+    subsection_title("5.1 Raw Validation", story, styles)
+    if not raw_validation.empty and "status" in raw_validation.columns:
+        story.append(df_to_table(raw_validation.groupby("status").size().reset_index(name="check_count"), styles))
     else:
-        story.append(paragraph("DummyJSON validation summary not available.", styles))
+        story.append(paragraph("Raw validation summary not available.", styles))
 
-    subsection_title("5.2 Retailrocket Validation", story, styles)
+    subsection_title("5.2 Staged and Curated Validation", story, styles)
     if not retail_validation.empty and "status" in retail_validation.columns:
         story.append(df_to_table(retail_validation.groupby("status").size().reset_index(name="check_count"), styles))
     else:
@@ -385,19 +400,36 @@ def build_pdf() -> None:
     story.append(
         paragraph(
             "Validation checks include missing values, duplicate IDs, schema mismatch, valid event types, "
-            "transaction ID consistency, latest item metadata uniqueness, and metadata coverage.",
+            "transaction ID consistency, latest item metadata uniqueness, and metadata coverage. The current "
+            "reports contain no failing validation checks.",
             styles,
         )
     )
+    warning_df = validation_warning_details(retail_validation)
+    if warning_df.empty:
+        story.append(paragraph("No warning-level staged validation checks are present in the current report.", styles))
+    else:
+        story.append(
+            paragraph(
+                "Warning-level checks are documented and do not block the pipeline. Current warnings are related "
+                "to duplicate event groups and item metadata coverage for category and availability fields.",
+                styles,
+            )
+        )
+        story.append(df_to_table(warning_df, styles, max_rows=6, max_cols=4))
 
     section_title("6. Data Preparation and EDA Plots", story, styles)
     story.append(
         paragraph(
-            "Raw CSV/API data is converted into clean Parquet datasets. EDA artifacts summarize event distribution, "
-            "item popularity, user activity distribution, and model metrics.",
+            "Raw CSV/API data is converted into clean staged Parquet datasets and curated analytical datasets. "
+            "EDA artifacts summarize event distribution, item popularity, user activity distribution, and model metrics.",
             styles,
         )
     )
+    subsection_title("6.1 Staged Preparation Summary", story, styles)
+    story.append(df_to_table(preparation, styles, max_rows=8, max_cols=7))
+    subsection_title("6.2 Curated Dataset Summary", story, styles)
+    story.append(df_to_table(curated, styles, max_rows=5, max_cols=7))
     story.append(KeepTogether(image_block(PLOTS_DIR / "retailrocket_event_distribution.png", "Retailrocket event distribution.", styles)))
     story.append(KeepTogether(image_block(PLOTS_DIR / "retailrocket_top_items.png", "Top Retailrocket items by popularity score.", styles)))
     story.append(KeepTogether(image_block(PLOTS_DIR / "retailrocket_user_activity_distribution.png", "Retailrocket user activity distribution.", styles)))
@@ -504,7 +536,7 @@ def build_pdf() -> None:
     story.append(
         paragraph(
             "MLflow stores run IDs, parameters, metrics, and artifacts. Screenshots below show successful experiment "
-            "tracking for DummyJSON and Retailrocket.",
+            "tracking for Retailrocket models.",
             styles,
         )
     )
@@ -513,7 +545,6 @@ def build_pdf() -> None:
         ("mlflow_02_retailrocket_runs_table.png", "Retailrocket runs table with metrics."),
         ("mlflow_03_retailrocket_run_overview.png", "Retailrocket run overview."),
         ("mlflow_04_retailrocket_model_metrics.png", "Retailrocket metric details."),
-        ("mlflow_05_dummyjson_runs_table.png", "DummyJSON runs table."),
         ("mlflow_06_retailrocket_content_based_run.png", "Retailrocket content-based recommender run in MLflow."),
     ]
 
@@ -533,15 +564,13 @@ def build_pdf() -> None:
     section_title("14. Pipeline Orchestration", story, styles)
     story.append(
         paragraph(
-            "Prefect orchestrates the pipeline. The Retailrocket flow runs inspection, preparation, validation, "
-            "DuckDB loading, feature engineering, model training, and inference.",
+            "Prefect orchestrates the Retailrocket-only pipeline. The flow runs batch ingestion, REST or mock API "
+            "delta ingestion, raw validation, staged and curated preparation, warehouse loading, feature building, "
+            "feature retrieval, model training, inference, comparison, and report generation.",
             styles,
         )
     )
-    subsection_title("14.1 DummyJSON Orchestration", story, styles)
-    story.append(df_to_table(dummy_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=12, max_cols=4))
-    subsection_title("14.2 Retailrocket Orchestration", story, styles)
-    story.append(df_to_table(retail_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=12, max_cols=4))
+    story.append(df_to_table(retail_orchestration[["step_order", "step_name", "status", "duration_seconds"]], styles, max_rows=20, max_cols=4))
 
     section_title("15. Reproducibility Workflow", story, styles)
     story.append(
@@ -550,23 +579,27 @@ def build_pdf() -> None:
                 "Activate environment: conda activate recomart",
                 "Check version state: git status and dvc status",
                 "Restore tracked artifacts if remote is configured: dvc pull",
-                "Run DummyJSON flow: python -m orchestration.dummyjson_pipeline",
                 "Run Retailrocket flow: python -m orchestration.retailrocket_pipeline",
+                "Run real API ingestion: python -m src.ingestion.ingest_retailrocket_catalog_api",
+                "Run explicit real API ingestion: RECOMART_CATALOG_API_MOCK_MODE=false RECOMART_CATALOG_API_BASE_URL=https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud RECOMART_CATALOG_API_ENDPOINT=/items RECOMART_CATALOG_API_PAGE_SIZE=50 python -m src.ingestion.ingest_retailrocket_catalog_api",
+                "Run mock fallback: RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api",
+                "Schedule REST ingestion every 30 minutes: prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow --name retailrocket-api-every-30-minutes --interval 1800 --pool default-agent-pool",
                 "Open MLflow UI using the tracking URI from Python: mlflow ui --backend-store-uri \"$TRACKING_URI\" --port 5001",
             ],
             styles,
         )
     )
 
-    section_title("16. Limitations and Future Work", story, styles)
+    section_title("16. Operational Notes", story, styles)
     story.append(
         bullet_list(
             [
-                "Current Retailrocket models are lightweight baselines; future work can add deeper personalized collaborative filtering.",
-                "Future work can add item-item collaborative filtering or matrix factorization.",
-                "Candidate generation can be improved using category and availability filtering.",
-                "A FastAPI serving endpoint and Streamlit monitoring dashboard can be added.",
-                "A scheduled Prefect deployment can automate periodic refreshes.",
+                "Current Retailrocket models are lightweight and suitable for the assignment scope.",
+                "The content-based model is the main assignment model; popularity is retained as a benchmark.",
+                "The API ingestion flow uses the teammate API by default and supports local mock fallback by environment variable.",
+                "The real API serves new rows without repetition; the ingestion client records API count, total rows, unread rows, and success metadata.",
+                "Generated heavy data and model files are DVC-tracked rather than committed directly to Git.",
+                "The Prefect API ingestion deployment command documents the 30-minute periodic metadata refresh.",
             ],
             styles,
         )

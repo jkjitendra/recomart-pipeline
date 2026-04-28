@@ -1,75 +1,98 @@
 # Reproducibility Commands
 
-## Activate environment
+## Activate Environment
 
 ```bash
 conda activate recomart
 ```
 
-## Check repository and DVC state
+## Check Repository and DVC State
 
 ```bash
 git status
 dvc status
 ```
 
-## Restore DVC-tracked data and models if needed
+## Restore DVC-Tracked Data and Models
 
 ```bash
 dvc pull
 ```
 
-If no DVC remote is configured, the DVC cache must already exist locally.
-
-## Run DummyJSON pipeline
-
-```bash
-python -m orchestration.dummyjson_pipeline
-```
-
-## Run Retailrocket pipeline
+## Run Full Retailrocket Prefect Pipeline
 
 ```bash
 python -m orchestration.retailrocket_pipeline
 ```
 
-## Run Retailrocket training only
+## Run API Ingestion Only
+
+```bash
+python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Explicit real API mode:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=false \
+RECOMART_CATALOG_API_BASE_URL="https://recomart-flask.295uyonmxxer.us-south.codeengine.appdomain.cloud" \
+RECOMART_CATALOG_API_ENDPOINT="/items" \
+RECOMART_CATALOG_API_PAGE_SIZE=50 \
+python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+Mock fallback:
+
+```bash
+RECOMART_CATALOG_API_MOCK_MODE=true python -m src.ingestion.ingest_retailrocket_catalog_api
+```
+
+## Schedule API Ingestion Every 30 Minutes
+
+```bash
+prefect deploy orchestration/retailrocket_api_ingestion_flow.py:retailrocket_api_ingestion_flow \
+  --name retailrocket-api-every-30-minutes \
+  --interval 1800 \
+  --pool default-agent-pool
+```
+
+## Run Retailrocket Training Only
 
 ```bash
 python -m src.training.train_retailrocket_popularity_recommender
 python -m src.training.train_retailrocket_content_recommender
 ```
 
-## Run Retailrocket inference
+## Run Retailrocket Inference
 
 ```bash
-python -m src.serving.recommend_retailrocket
-python -m src.serving.recommend_retailrocket --user-id 1327109 --top-k 10
-python -m src.serving.recommend_retailrocket --demo-users 1327109,925350,839657 --top-k 5
+python -m src.serving.recommend_retailrocket --model popularity --top-k 5
+python -m src.serving.recommend_retailrocket --model content_based --top-k 5
 ```
 
 ## Open MLflow UI
 
-Use the same MLflow tracking URI used by the training scripts.
-
 ```bash
-TRACKING_URI=$(python -c 'import mlflow; print(mlflow.get_tracking_uri())')
-mlflow ui --backend-store-uri "$TRACKING_URI" --port 5001
+mlflow ui --backend-store-uri sqlite:///$(pwd)/mlflow.db --default-artifact-root $(pwd)/mlruns --port 5001
 ```
 
-Open `http://127.0.0.1:5001`, then go to `model training → Experiments`.
-
-## Check DuckDB warehouse
+If local runs are stored in the default file backend, use:
 
 ```bash
-duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
+mlflow ui --backend-store-uri file:$(pwd)/mlruns --port 5001
 ```
 
-## Regenerate final report
+## Regenerate Evidence and Reports
 
 ```bash
 python -m src.reporting.generate_assignment_evidence
 python -m src.reporting.generate_model_comparison
 python -m src.reporting.generate_final_report
 python -m src.reporting.generate_assignment_pdf
+```
+
+## Check DuckDB Warehouse
+
+```bash
+duckdb data/warehouse/recomart.duckdb "SELECT event_type, COUNT(*) FROM mart.retailrocket_interactions GROUP BY event_type;"
 ```

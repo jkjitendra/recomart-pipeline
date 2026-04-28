@@ -1,0 +1,41 @@
+{
+  "registry_name": "retailrocket_recommendation_feature_registry",
+  "registry_version": "v1",
+  "project_name": "RecoMart",
+  "description": "Custom lightweight feature registry for Retailrocket recommendation training and inference.",
+  "feature_views": [
+    {
+      "name": "retailrocket_user_features",
+      "version": "v1",
+      "entity_keys": ["user_id"],
+      "source_path": "data/features/source=retailrocket/user_features.parquet",
+      "source_table": "features.retailrocket_user_features",
+      "created_by": "sql/retailrocket_features.sql",
+      "transformation": "Aggregates Retailrocket user interaction history from mart.retailrocket_user_features and derives activity, conversion, and intensity features.",
+      "used_for": ["training", "inference", "profiling"],
+      "description": "User-level behavioral features for Retailrocket visitors."
+    },
+    {
+      "name": "retailrocket_item_features",
+      "version": "v1",
+      "entity_keys": ["item_id"],
+      "source_path": "data/features/source=retailrocket/item_features.parquet",
+      "source_table": "features.retailrocket_item_features",
+      "created_by": "sql/retailrocket_features.sql",
+      "transformation": "Aggregates Retailrocket item interactions and joins latest category and availability metadata from mart.retailrocket_item_features.",
+      "used_for": ["training", "inference", "profiling", "candidate filtering"],
+      "description": "Item-level popularity, conversion, and metadata features for candidate ranking."
+    },
+    {
+      "name": "retailrocket_user_item_features",
+      "version": "v1",
+      "entity_keys": ["user_id", "item_id"],
+      "source_path": "data/features/source=retailrocket/user_item_features.parquet",
+      "source_table": "features.retailrocket_user_item_features",
+      "created_by": "sql/retailrocket_features.sql",
+      "transformation": "Aggregates Retailrocket user-item interaction history and enriches it with item metadata and implicit labels.",
+      "used_for": ["training", "inference", "profiling"],
+      "description": "User-item interaction features for supervised and implicit-feedback recommendation modeling."
+    }
+  ]
+}
