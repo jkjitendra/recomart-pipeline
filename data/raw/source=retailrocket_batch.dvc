@@ -1,6 +1,6 @@
 outs:
-- md5: 102bada8dce214fb6e395264e2dbf5d9.dir
-  size: 2892849190
-  nfiles: 30
+- md5: 74343792b001f21d8b0d86e3d40e1822.dir
+  size: 3471419028
+  nfiles: 36
   hash: md5
   path: source=retailrocket_batch
